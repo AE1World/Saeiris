@@ -24,17 +24,27 @@ if((cLon>-82&&cLon<-34&&cLat>-15&&cLat<12)||(cLon>8&&cLon<35&&a<8)||(cLon>95&&cL
 
 function featureCentroid(f){let tLat=0,tLon=0,c=0;const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly)for(let i=0;i<ring.length;i+=3){tLon+=ring[i][0];tLat+=ring[i][1];c++;}return c>0?{lat:tLat/c,lon:tLon/c}:{lat:0,lon:0};}
 function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
+function midVisible(lat1,lon1,lat2,lon2,rLat,rLon){
+  // Check if the geographic midpoint between two points is on the visible hemisphere
+  const mLat=(lat1+lat2)/2;
+  let mLon=(lon1+lon2)/2;
+  // Handle date line crossing
+  if(Math.abs(lon2-lon1)>180)mLon+=180;
+  const phi=mLat*Math.PI/180,lam=(mLon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;
+  return Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam)>0;
+}
 function clipRing(ring,rLat,rLon,R,cx,cy){
-  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true,cosC:p.cosC}:{x:0,y:0,vis:false,cosC:-1};});
+  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true,lat:pt[1],lon:pt[0]}:{x:0,y:0,vis:false,lat:pt[1],lon:pt[0]};});
   const segs=[];let cur=[];
   for(let i=0;i<pr.length;i++){
     const pt=pr[i];
     if(pt.vis){
       if(cur.length>0){
         const pv=cur[cur.length-1];
-        const sd=Math.hypot(pt.x-pv.x,pt.y-pv.y);
-        // Only split for extreme screen jumps — bigger than the globe diameter
-        if(sd>R*1.8){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
+        // If both points visible but the path between them crosses the back of the globe, split
+        if(!midVisible(pv.lat,pv.lon,pt.lat,pt.lon,rLat,rLon)){
+          if(cur.length>=3)segs.push(cur);cur=[pt];continue;
+        }
       }
       cur.push(pt);
     }else{if(cur.length>=3)segs.push(cur);cur=[];}
