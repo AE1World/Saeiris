@@ -24,15 +24,6 @@ if((cLon>-82&&cLon<-34&&cLat>-15&&cLat<12)||(cLon>8&&cLon<35&&a<8)||(cLon>95&&cL
 
 function featureCentroid(f){let tLat=0,tLon=0,c=0;const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly)for(let i=0;i<ring.length;i+=3){tLon+=ring[i][0];tLat+=ring[i][1];c++;}return c>0?{lat:tLat/c,lon:tLon/c}:{lat:0,lon:0};}
 function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
-function midVisible(lat1,lon1,lat2,lon2,rLat,rLon){
-  // Check if the geographic midpoint between two points is on the visible hemisphere
-  const mLat=(lat1+lat2)/2;
-  let mLon=(lon1+lon2)/2;
-  // Handle date line crossing
-  if(Math.abs(lon2-lon1)>180)mLon+=180;
-  const phi=mLat*Math.PI/180,lam=(mLon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;
-  return Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam)>0;
-}
 function clipRing(ring,rLat,rLon,R,cx,cy){
   const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true,lat:pt[1],lon:pt[0]}:{x:0,y:0,vis:false,lat:pt[1],lon:pt[0]};});
   const segs=[];let cur=[];
@@ -41,10 +32,22 @@ function clipRing(ring,rLat,rLon,R,cx,cy){
     if(pt.vis){
       if(cur.length>0){
         const pv=cur[cur.length-1];
-        // If both points visible but the path between them crosses the back of the globe, split
-        if(!midVisible(pv.lat,pv.lon,pt.lat,pt.lon,rLat,rLon)){
-          if(cur.length>=3)segs.push(cur);cur=[pt];continue;
+        // 1. Date line crossing: longitude jump > 90 degrees means wrapping
+        const dLon=Math.abs(pt.lon-pv.lon);
+        if(dLon>90){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
+        // 2. Path crosses back: sample midpoint and quarter points
+        const toRad=Math.PI/180,rLatR=rLat*toRad,rLonR=rLon*toRad;
+        let crosses=false;
+        for(let t=0.25;t<=0.75;t+=0.25){
+          const mLat=pv.lat+(pt.lat-pv.lat)*t;
+          let lonDiff=pt.lon-pv.lon;
+          if(lonDiff>180)lonDiff-=360;if(lonDiff<-180)lonDiff+=360;
+          const mLon=pv.lon+lonDiff*t;
+          const phi=mLat*toRad,lam=(mLon-rLon)*toRad;
+          const cosC=Math.sin(rLatR)*Math.sin(phi)+Math.cos(rLatR)*Math.cos(phi)*Math.cos(lam);
+          if(cosC<-0.05){crosses=true;break;}
         }
+        if(crosses){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
       }
       cur.push(pt);
     }else{if(cur.length>=3)segs.push(cur);cur=[];}
