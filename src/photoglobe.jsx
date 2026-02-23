@@ -7,10 +7,37 @@ import { supabase } from "./supabase";
 
 // TopoJSON
 function decodeTopo(topo,name){const obj=topo.objects[name];if(!obj)return[];const{arcs:ta,transform:tr}=topo;const sc=tr?.scale||[1,1],tl=tr?.translate||[0,0];
-function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;coords.push([x*sc[0]+tl[0],y*sc[1]+tl[1]]);}if(idx<0)coords.reverse();return coords;}
+function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;let lon=x*sc[0]+tl[0],lat=y*sc[1]+tl[1];coords.push([lon,lat]);}if(idx<0)coords.reverse();return coords;}
 function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
+// Split rings that cross the date line into separate sub-rings
+function splitDateLine(ring){
+  const rings=[];let cur=[];
+  for(let i=0;i<ring.length;i++){
+    if(cur.length>0){
+      const prevLon=cur[cur.length-1][0],curLon=ring[i][0];
+      // Detect date line crossing: raw longitude jumps > 90 degrees
+      if(Math.abs(curLon-prevLon)>90){
+        if(cur.length>=3)rings.push(cur);
+        cur=[];
+      }
+    }
+    cur.push(ring[i]);
+  }
+  if(cur.length>=3)rings.push(cur);
+  return rings.length>0?rings:[ring];
+}
 const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
-for(const g of geoms){if(g.type==="Polygon")feats.push({type:"Polygon",coords:g.arcs.map(ring2c)});else if(g.type==="MultiPolygon")feats.push({type:"MultiPolygon",coords:g.arcs.map(p=>p.map(ring2c))});}return feats;}
+for(const g of geoms){
+  if(g.type==="Polygon"){
+    const splitCoords=[];
+    for(const ring of g.arcs.map(ring2c)){for(const sr of splitDateLine(ring))splitCoords.push([sr]);}
+    feats.push({type:"MultiPolygon",coords:splitCoords});
+  }else if(g.type==="MultiPolygon"){
+    const splitCoords=[];
+    for(const poly of g.arcs.map(p=>p.map(ring2c)))for(const ring of poly){for(const sr of splitDateLine(ring))splitCoords.push([sr]);}
+    feats.push({type:"MultiPolygon",coords:splitCoords});
+  }
+}return feats;}
 
 function useWorldMap(){const[feats,setFeats]=useState([]);const[loading,setLoading]=useState(true);
 useEffect(()=>{fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json").then(r=>r.json()).then(t=>{setFeats(decodeTopo(t,"countries"));setLoading(false);}).catch(()=>setLoading(false));},[]);return{feats,loading};}
@@ -25,29 +52,16 @@ if((cLon>-82&&cLon<-34&&cLat>-15&&cLat<12)||(cLon>8&&cLon<35&&a<8)||(cLon>95&&cL
 function featureCentroid(f){let tLat=0,tLon=0,c=0;const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly)for(let i=0;i<ring.length;i+=3){tLon+=ring[i][0];tLat+=ring[i][1];c++;}return c>0?{lat:tLat/c,lon:tLon/c}:{lat:0,lon:0};}
 function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
 function clipRing(ring,rLat,rLon,R,cx,cy){
-  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true,lat:pt[1],lon:pt[0]}:{x:0,y:0,vis:false,lat:pt[1],lon:pt[0]};});
+  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true}:{x:0,y:0,vis:false};});
   const segs=[];let cur=[];
   for(let i=0;i<pr.length;i++){
     const pt=pr[i];
     if(pt.vis){
       if(cur.length>0){
         const pv=cur[cur.length-1];
-        // 1. Date line crossing: longitude jump > 90 degrees means wrapping
-        const dLon=Math.abs(pt.lon-pv.lon);
-        if(dLon>90){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
-        // 2. Path crosses back: sample midpoint and quarter points
-        const toRad=Math.PI/180,rLatR=rLat*toRad,rLonR=rLon*toRad;
-        let crosses=false;
-        for(let t=0.25;t<=0.75;t+=0.25){
-          const mLat=pv.lat+(pt.lat-pv.lat)*t;
-          let lonDiff=pt.lon-pv.lon;
-          if(lonDiff>180)lonDiff-=360;if(lonDiff<-180)lonDiff+=360;
-          const mLon=pv.lon+lonDiff*t;
-          const phi=mLat*toRad,lam=(mLon-rLon)*toRad;
-          const cosC=Math.sin(rLatR)*Math.sin(phi)+Math.cos(rLatR)*Math.cos(phi)*Math.cos(lam);
-          if(cosC<-0.05){crosses=true;break;}
-        }
-        if(crosses){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
+        const sd=Math.hypot(pt.x-pv.x,pt.y-pv.y);
+        // Safety: split if screen distance is larger than globe diameter
+        if(sd>R*1.5){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
       }
       cur.push(pt);
     }else{if(cur.length>=3)segs.push(cur);cur=[];}
