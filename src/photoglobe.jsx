@@ -9,21 +9,40 @@ import { supabase } from "./supabase";
 function decodeTopo(topo,name){const obj=topo.objects[name];if(!obj)return[];const{arcs:ta,transform:tr}=topo;const sc=tr?.scale||[1,1],tl=tr?.translate||[0,0];
 function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;coords.push([x*sc[0]+tl[0],y*sc[1]+tl[1]]);}if(idx<0)coords.reverse();return coords;}
 function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
-// Split a ring at date line crossings (lon jumps > 30°)
+// Split a ring at date line crossings AND into chunks spanning max ~90° longitude
 function splitRing(ring){
   if(ring.length<3)return[ring];
-  const parts=[];let cur=[ring[0]];
+  // First split at date line crossings (lon jumps > 30°)
+  const dateSplit=[];let cur=[ring[0]];
   for(let i=1;i<ring.length;i++){
-    const dLon=Math.abs(ring[i][0]-ring[i-1][0]);
-    if(dLon>30){
-      if(cur.length>=3)parts.push(cur);
+    if(Math.abs(ring[i][0]-ring[i-1][0])>30){
+      if(cur.length>=3)dateSplit.push(cur);
       cur=[ring[i]];
-    }else{cur.push(ring[i]);}
+    }else cur.push(ring[i]);
   }
-  if(cur.length>=3)parts.push(cur);
-  // If no splits happened, return original ring
-  if(parts.length===0)return[ring];
-  return parts;
+  if(cur.length>=3)dateSplit.push(cur);
+  if(dateSplit.length===0)dateSplit.push(ring);
+  // Then split any piece that spans more than 90° longitude
+  const result=[];
+  for(const piece of dateSplit){
+    const lons=piece.map(p=>p[0]);
+    const lonSpan=Math.max(...lons)-Math.min(...lons);
+    if(lonSpan>90){
+      // Split into segments where we track running lon range
+      let seg=[piece[0]];
+      let segMin=piece[0][0],segMax=piece[0][0];
+      for(let i=1;i<piece.length;i++){
+        const lon=piece[i][0];
+        const newMin=Math.min(segMin,lon),newMax=Math.max(segMax,lon);
+        if(newMax-newMin>90){
+          if(seg.length>=3)result.push(seg);
+          seg=[piece[i]];segMin=lon;segMax=lon;
+        }else{seg.push(piece[i]);segMin=newMin;segMax=newMax;}
+      }
+      if(seg.length>=3)result.push(seg);
+    }else{result.push(piece);}
+  }
+  return result.length>0?result:[ring];
 }
 const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
 for(const g of geoms){
