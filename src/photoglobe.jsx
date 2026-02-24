@@ -9,8 +9,31 @@ import { supabase } from "./supabase";
 function decodeTopo(topo,name){const obj=topo.objects[name];if(!obj)return[];const{arcs:ta,transform:tr}=topo;const sc=tr?.scale||[1,1],tl=tr?.translate||[0,0];
 function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;coords.push([x*sc[0]+tl[0],y*sc[1]+tl[1]]);}if(idx<0)coords.reverse();return coords;}
 function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
+// Split a ring at date line crossings (lon jumps > 30°)
+function splitRing(ring){
+  const parts=[];let cur=[ring[0]];
+  for(let i=1;i<ring.length;i++){
+    const dLon=Math.abs(ring[i][0]-ring[i-1][0]);
+    if(dLon>30){
+      if(cur.length>=3)parts.push(cur);
+      cur=[ring[i]];
+    }else{cur.push(ring[i]);}
+  }
+  if(cur.length>=3)parts.push(cur);
+  return parts.length>0?parts:[ring];
+}
 const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
-for(const g of geoms){if(g.type==="Polygon")feats.push({type:"Polygon",coords:g.arcs.map(ring2c)});else if(g.type==="MultiPolygon")feats.push({type:"MultiPolygon",coords:g.arcs.map(p=>p.map(ring2c))});}return feats;}
+for(const g of geoms){
+  if(g.type==="Polygon"){
+    const allRings=[];
+    for(const ring of g.arcs.map(ring2c)){for(const sr of splitRing(ring))allRings.push([sr]);}
+    feats.push({type:"MultiPolygon",coords:allRings});
+  }else if(g.type==="MultiPolygon"){
+    const allRings=[];
+    for(const poly of g.arcs.map(p=>p.map(ring2c)))for(const ring of poly){for(const sr of splitRing(ring))allRings.push([sr]);}
+    feats.push({type:"MultiPolygon",coords:allRings});
+  }
+}return feats;}
 
 function useWorldMap(){const[feats,setFeats]=useState([]);const[loading,setLoading]=useState(true);
 useEffect(()=>{fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json").then(r=>r.json()).then(t=>{setFeats(decodeTopo(t,"countries"));setLoading(false);}).catch(()=>setLoading(false));},[]);return{feats,loading};}
