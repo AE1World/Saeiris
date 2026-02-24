@@ -57,7 +57,29 @@ function clipRing(ring,rLat,rLon,R,cx,cy){
     if(pr[i].vis){cur.push(pr[i]);}
     else{if(cur.length>=3)segs.push(cur);cur=[];}
   }
-  if(cur.length>=3)segs.push(cur);return segs;
+  if(cur.length>=3)segs.push(cur);
+  // For each segment, if first and last points are far apart,
+  // add points along the globe edge to close the shape cleanly
+  return segs.map(seg=>{
+    const first=seg[0],last=seg[seg.length-1];
+    const dist=Math.hypot(last.x-first.x,last.y-first.y);
+    if(dist>R*0.3){
+      // Add arc along the globe edge from last point back to first point
+      const a1=Math.atan2(last.y-cy,last.x-cx);
+      const a2=Math.atan2(first.y-cy,first.x-cx);
+      let da=a2-a1;
+      if(da>Math.PI)da-=2*Math.PI;
+      if(da<-Math.PI)da+=2*Math.PI;
+      const steps=Math.max(4,Math.ceil(Math.abs(da)/(Math.PI/12)));
+      const edgePts=[];
+      for(let s=1;s<steps;s++){
+        const a=a1+da*(s/steps);
+        edgePts.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),vis:true});
+      }
+      return[...seg,...edgePts];
+    }
+    return seg;
+  });
 }
 
 function timeAgo(ts){if(!ts)return"";const d=Math.floor((Date.now()-new Date(ts).getTime())/864e5);if(d<1)return"Today";if(d===1)return"Yesterday";if(d<30)return d+"d ago";if(d<365)return Math.floor(d/30)+"mo ago";return Math.floor(d/365)+"y ago";}
