@@ -11,6 +11,7 @@ function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;fo
 function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
 // Split a ring at date line crossings (lon jumps > 30°)
 function splitRing(ring){
+  if(ring.length<3)return[ring];
   const parts=[];let cur=[ring[0]];
   for(let i=1;i<ring.length;i++){
     const dLon=Math.abs(ring[i][0]-ring[i-1][0]);
@@ -20,7 +21,9 @@ function splitRing(ring){
     }else{cur.push(ring[i]);}
   }
   if(cur.length>=3)parts.push(cur);
-  return parts.length>0?parts:[ring];
+  // If no splits happened, return original ring
+  if(parts.length===0)return[ring];
+  return parts;
 }
 const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
 for(const g of geoms){
@@ -48,26 +51,11 @@ if((cLon>-82&&cLon<-34&&cLat>-15&&cLat<12)||(cLon>8&&cLon<35&&a<8)||(cLon>95&&cL
 function featureCentroid(f){let tLat=0,tLon=0,c=0;const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly)for(let i=0;i<ring.length;i+=3){tLon+=ring[i][0];tLat+=ring[i][1];c++;}return c>0?{lat:tLat/c,lon:tLon/c}:{lat:0,lon:0};}
 function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
 function clipRing(ring,rLat,rLon,R,cx,cy){
-  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true,cosC:p.cosC}:{x:0,y:0,vis:false,cosC:-1};});
+  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true}:{x:0,y:0,vis:false};});
   const segs=[];let cur=[];
   for(let i=0;i<pr.length;i++){
-    const pt=pr[i];
-    if(pt.vis){
-      if(cur.length>0){
-        const pv=cur[cur.length-1];
-        // Check if this segment is a wrap-around artifact:
-        // Both points are near the globe edge (cosC < 0.3) AND
-        // the segment is long on screen relative to how close they are to the edge
-        const sd=Math.hypot(pt.x-pv.x,pt.y-pv.y);
-        const minCosC=Math.min(pt.cosC,pv.cosC);
-        // The closer to the edge (lower cosC), the shorter segments should be
-        // Near the edge, legitimate segments are very short because the projection compresses
-        // Artifacts are long because they stretch across the globe
-        const maxAllowed=R*(0.3+minCosC*1.5);
-        if(sd>maxAllowed){if(cur.length>=3)segs.push(cur);cur=[pt];continue;}
-      }
-      cur.push(pt);
-    }else{if(cur.length>=3)segs.push(cur);cur=[];}
+    if(pr[i].vis){cur.push(pr[i]);}
+    else{if(cur.length>=3)segs.push(cur);cur=[];}
   }
   if(cur.length>=3)segs.push(cur);return segs;
 }
