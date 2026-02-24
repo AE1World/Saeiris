@@ -73,32 +73,18 @@ function clipRing(ring,rLat,rLon,R,cx,cy){
   const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true}:{x:0,y:0,vis:false};});
   const segs=[];let cur=[];
   for(let i=0;i<pr.length;i++){
-    if(pr[i].vis){cur.push(pr[i]);}
-    else{if(cur.length>=3)segs.push(cur);cur=[];}
-  }
-  if(cur.length>=3)segs.push(cur);
-  // For each segment, if first and last points are far apart,
-  // add points along the globe edge to close the shape cleanly
-  return segs.map(seg=>{
-    const first=seg[0],last=seg[seg.length-1];
-    const dist=Math.hypot(last.x-first.x,last.y-first.y);
-    if(dist>R*0.3){
-      // Add arc along the globe edge from last point back to first point
-      const a1=Math.atan2(last.y-cy,last.x-cx);
-      const a2=Math.atan2(first.y-cy,first.x-cx);
-      let da=a2-a1;
-      if(da>Math.PI)da-=2*Math.PI;
-      if(da<-Math.PI)da+=2*Math.PI;
-      const steps=Math.max(4,Math.ceil(Math.abs(da)/(Math.PI/12)));
-      const edgePts=[];
-      for(let s=1;s<steps;s++){
-        const a=a1+da*(s/steps);
-        edgePts.push({x:cx+R*Math.cos(a),y:cy+R*Math.sin(a),vis:true});
+    if(pr[i].vis){
+      if(cur.length>0){
+        const pv=cur[cur.length-1];
+        const sd=Math.hypot(pr[i].x-pv.x,pr[i].y-pv.y);
+        // If two consecutive visible points are far apart on screen, they must be
+        // on opposite sides of the visible hemisphere - split here
+        if(sd>R*0.3){if(cur.length>=3)segs.push(cur);cur=[pr[i]];continue;}
       }
-      return[...seg,...edgePts];
-    }
-    return seg;
-  });
+      cur.push(pr[i]);
+    }else{if(cur.length>=3)segs.push(cur);cur=[];}
+  }
+  if(cur.length>=3)segs.push(cur);return segs;
 }
 
 function timeAgo(ts){if(!ts)return"";const d=Math.floor((Date.now()-new Date(ts).getTime())/864e5);if(d<1)return"Today";if(d===1)return"Yesterday";if(d<30)return d+"d ago";if(d<365)return Math.floor(d/30)+"mo ago";return Math.floor(d/365)+"y ago";}
@@ -164,8 +150,8 @@ function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,on
     ctx.strokeStyle="rgba(255,255,255,0.05)";ctx.lineWidth=0.5;
     for(let lat=-80;lat<=80;lat+=20){ctx.beginPath();let s=false;for(let lon=-180;lon<=180;lon+=3){const p=proj(lat,lon);if(p){if(!s){ctx.moveTo(p.x,p.y);s=true;}else ctx.lineTo(p.x,p.y);}else s=false;}ctx.stroke();}
     for(let lon=-180;lon<=180;lon+=30){ctx.beginPath();let s=false;for(let lat=-90;lat<=90;lat+=3){const p=proj(lat,lon);if(p){if(!s){ctx.moveTo(p.x,p.y);s=true;}else ctx.lineTo(p.x,p.y);}else s=false;}ctx.stroke();}
-    for(let fi=0;fi<feats.length;fi++){const f=feats[fi];const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly){const segs=clipRing(ring,rotation.lat,rotation.lon,R,cx,cy);for(const seg of segs){const closeDist=Math.hypot(seg[seg.length-1].x-seg[0].x,seg[seg.length-1].y-seg[0].y);if(closeDist>R*0.5)continue;ctx.beginPath();ctx.moveTo(seg[0].x+3,seg[0].y+4);for(let i=1;i<seg.length;i++)ctx.lineTo(seg[i].x+3,seg[i].y+4);ctx.fillStyle="rgba(0,20,40,0.3)";ctx.fill();}}}
-    for(let fi=0;fi<feats.length;fi++){const f=feats[fi];const colors=featColors[fi];const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly){const segs=clipRing(ring,rotation.lat,rotation.lon,R,cx,cy);for(const seg of segs){const closeDist=Math.hypot(seg[seg.length-1].x-seg[0].x,seg[seg.length-1].y-seg[0].y);ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);for(let i=1;i<seg.length;i++)ctx.lineTo(seg[i].x,seg[i].y);if(closeDist<=R*0.5){ctx.fillStyle=colors.fill;ctx.fill();}ctx.strokeStyle=colors.stroke;ctx.lineWidth=0.6;ctx.stroke();}}}
+    for(let fi=0;fi<feats.length;fi++){const f=feats[fi];const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly){const segs=clipRing(ring,rotation.lat,rotation.lon,R,cx,cy);for(const seg of segs){ctx.beginPath();ctx.moveTo(seg[0].x+3,seg[0].y+4);for(let i=1;i<seg.length;i++)ctx.lineTo(seg[i].x+3,seg[i].y+4);ctx.fillStyle="rgba(0,20,40,0.3)";ctx.fill();}}}
+    for(let fi=0;fi<feats.length;fi++){const f=feats[fi];const colors=featColors[fi];const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly){const segs=clipRing(ring,rotation.lat,rotation.lon,R,cx,cy);for(const seg of segs){ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);for(let i=1;i<seg.length;i++)ctx.lineTo(seg[i].x,seg[i].y);ctx.fillStyle=colors.fill;ctx.fill();ctx.strokeStyle=colors.stroke;ctx.lineWidth=0.6;ctx.stroke();}}}
     const aG=ctx.createRadialGradient(cx-R*0.35,cy-R*0.35,0,cx,cy,R);aG.addColorStop(0,"rgba(255,255,255,0.08)");aG.addColorStop(0.4,"rgba(255,255,255,0.02)");aG.addColorStop(0.75,"rgba(0,0,0,0.02)");aG.addColorStop(1,"rgba(0,20,50,0.15)");ctx.fillStyle=aG;ctx.fillRect(0,0,dims.w,dims.h);
     ctx.restore();
     ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.strokeStyle="rgba(42,166,212,0.3)";ctx.lineWidth=2;ctx.stroke();
