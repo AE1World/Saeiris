@@ -1,61 +1,29 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
+import * as d3 from "d3";
 
 // ══════════════════════════════════════════════════════════════
-// AE-1 WORLD — PhotoGlobe with Supabase Backend
+// AE-1 WORLD — PhotoGlobe with D3 Orthographic Projection
 // ══════════════════════════════════════════════════════════════
 
-// TopoJSON
-function decodeTopo(topo,name){const obj=topo.objects[name];if(!obj)return[];const{arcs:ta,transform:tr}=topo;const sc=tr?.scale||[1,1],tl=tr?.translate||[0,0];
-function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;coords.push([x*sc[0]+tl[0],y*sc[1]+tl[1]]);}if(idx<0)coords.reverse();return coords;}
-function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
-// Split a ring at date line crossings AND into chunks spanning max ~90° longitude
-function splitRing(ring){
-  if(ring.length<3)return[ring];
-  // First split at date line crossings (lon jumps > 30°)
-  const dateSplit=[];let cur=[ring[0]];
-  for(let i=1;i<ring.length;i++){
-    if(Math.abs(ring[i][0]-ring[i-1][0])>30){
-      if(cur.length>=3)dateSplit.push(cur);
-      cur=[ring[i]];
-    }else cur.push(ring[i]);
+// TopoJSON → GeoJSON
+function decodeTopo(topo,name){
+  const obj=topo.objects[name];if(!obj)return[];
+  const{arcs:ta,transform:tr}=topo;const sc=tr?.scale||[1,1],tl=tr?.translate||[0,0];
+  function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;coords.push([x*sc[0]+tl[0],y*sc[1]+tl[1]]);}if(idx<0)coords.reverse();return coords;}
+  function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
+  const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
+  for(const g of geoms){
+    let geojson;
+    if(g.type==="Polygon"){
+      geojson={type:"Polygon",coordinates:g.arcs.map(ring2c)};
+    }else if(g.type==="MultiPolygon"){
+      geojson={type:"MultiPolygon",coordinates:g.arcs.map(p=>p.map(ring2c))};
+    }
+    if(geojson)feats.push({type:"Feature",geometry:geojson,properties:{}});
   }
-  if(cur.length>=3)dateSplit.push(cur);
-  if(dateSplit.length===0)dateSplit.push(ring);
-  // Then split any piece that spans more than 90° longitude
-  const result=[];
-  for(const piece of dateSplit){
-    const lons=piece.map(p=>p[0]);
-    const lonSpan=Math.max(...lons)-Math.min(...lons);
-    if(lonSpan>90){
-      // Split into segments where we track running lon range
-      let seg=[piece[0]];
-      let segMin=piece[0][0],segMax=piece[0][0];
-      for(let i=1;i<piece.length;i++){
-        const lon=piece[i][0];
-        const newMin=Math.min(segMin,lon),newMax=Math.max(segMax,lon);
-        if(newMax-newMin>90){
-          if(seg.length>=3)result.push(seg);
-          seg=[piece[i]];segMin=lon;segMax=lon;
-        }else{seg.push(piece[i]);segMin=newMin;segMax=newMax;}
-      }
-      if(seg.length>=3)result.push(seg);
-    }else{result.push(piece);}
-  }
-  return result.length>0?result:[ring];
+  return feats;
 }
-const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
-for(const g of geoms){
-  if(g.type==="Polygon"){
-    const allRings=[];
-    for(const ring of g.arcs.map(ring2c)){for(const sr of splitRing(ring))allRings.push([sr]);}
-    feats.push({type:"MultiPolygon",coords:allRings});
-  }else if(g.type==="MultiPolygon"){
-    const allRings=[];
-    for(const poly of g.arcs.map(p=>p.map(ring2c)))for(const ring of poly){for(const sr of splitRing(ring))allRings.push([sr]);}
-    feats.push({type:"MultiPolygon",coords:allRings});
-  }
-}return feats;}
 
 function useWorldMap(){const[feats,setFeats]=useState([]);const[loading,setLoading]=useState(true);
 useEffect(()=>{fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json").then(r=>r.json()).then(t=>{setFeats(decodeTopo(t,"countries"));setLoading(false);}).catch(()=>setLoading(false));},[]);return{feats,loading};}
@@ -67,25 +35,11 @@ if(a>28){if((cLon>-17&&cLon<60&&cLat>15&&cLat<38)||(cLon>50&&cLon<75&&cLat>25))r
 if(a>12){if(cLon>-20&&cLon<55&&cLat>10&&cLat<20)return{fill:"#D0BE84",stroke:"#BCA870"};if(cLon>68&&cLon<92&&cLat>8)return{fill:"#90BC72",stroke:"#78A65C"};return{fill:"#AECA7E",stroke:"#96B466"};}
 if((cLon>-82&&cLon<-34&&cLat>-15&&cLat<12)||(cLon>8&&cLon<35&&a<8)||(cLon>95&&cLon<140&&a<15))return{fill:"#6AAE5C",stroke:"#529844"};return{fill:"#72B262",stroke:"#5A9C4A"};}
 
-function featureCentroid(f){let tLat=0,tLon=0,c=0;const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly)for(let i=0;i<ring.length;i+=3){tLon+=ring[i][0];tLat+=ring[i][1];c++;}return c>0?{lat:tLat/c,lon:tLon/c}:{lat:0,lon:0};}
-function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
-function clipRing(ring,rLat,rLon,R,cx,cy){
-  const pr=ring.map(pt=>{const p=orthoProject(pt[1],pt[0],rLat,rLon,R,cx,cy);return p?{x:p.x,y:p.y,vis:true}:{x:0,y:0,vis:false};});
-  const segs=[];let cur=[];
-  for(let i=0;i<pr.length;i++){
-    if(pr[i].vis){
-      if(cur.length>0){
-        const pv=cur[cur.length-1];
-        const sd=Math.hypot(pr[i].x-pv.x,pr[i].y-pv.y);
-        // If two consecutive visible points are far apart on screen, they must be
-        // on opposite sides of the visible hemisphere - split here
-        if(sd>R*0.3){if(cur.length>=3)segs.push(cur);cur=[pr[i]];continue;}
-      }
-      cur.push(pr[i]);
-    }else{if(cur.length>=3)segs.push(cur);cur=[];}
-  }
-  if(cur.length>=3)segs.push(cur);return segs;
+function featureCentroid(feat){
+  const c=d3.geoCentroid(feat.geometry);
+  return{lat:c[1],lon:c[0]};
 }
+function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
 
 function timeAgo(ts){if(!ts)return"";const d=Math.floor((Date.now()-new Date(ts).getTime())/864e5);if(d<1)return"Today";if(d===1)return"Yesterday";if(d<30)return d+"d ago";if(d<365)return Math.floor(d/30)+"mo ago";return Math.floor(d/365)+"y ago";}
 function fmtDate(ts){if(!ts)return"";return new Date(ts).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});}
@@ -130,13 +84,19 @@ function AuthModal({onClose,onAuth}){
   </div>);
 }
 
-// ── Globe Canvas ──
+// ── Globe Canvas with D3 Orthographic Projection ──
 function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,onScaleChange}){
   const canvasRef=useRef(null);const containerRef=useRef(null);const[dims,setDims]=useState({w:900,h:700});
   const{feats,loading}=useWorldMap();const dragging=useRef(false);const dragMoved=useRef(false);const lastM=useRef({x:0,y:0});const hovered=useRef(null);
   const featColors=useMemo(()=>feats.map(f=>{const c=featureCentroid(f);return getLandColor(c.lat,c.lon);}),[feats]);
   useEffect(()=>{const ro=new ResizeObserver(e=>{for(const en of e)setDims({w:en.contentRect.width,h:en.contentRect.height});});if(containerRef.current)ro.observe(containerRef.current);return()=>ro.disconnect();},[]);
   const R=useMemo(()=>Math.min(dims.w,dims.h)*0.42*globeScale,[dims,globeScale]);const cx=dims.w/2,cy=dims.h/2;
+
+  // D3 projection - handles clipping correctly
+  const projection=useMemo(()=>d3.geoOrthographic().translate([cx,cy]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(0.5),[cx,cy,R,rotation]);
+  const pathGen=useMemo(()=>d3.geoPath(projection),[projection]);
+
+  // Keep orthoProject for pins and graticules
   const proj=useCallback((lat,lon)=>orthoProject(lat,lon,rotation.lat,rotation.lon,R,cx,cy),[R,cx,cy,rotation]);
 
   const draw=useCallback(()=>{
@@ -147,15 +107,27 @@ function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,on
     ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);const oG=ctx.createRadialGradient(cx-R*0.2,cy-R*0.25,R*0.05,cx,cy,R);
     oG.addColorStop(0,"#3CBAE0");oG.addColorStop(0.3,"#2AA6D4");oG.addColorStop(0.65,"#1E8AB8");oG.addColorStop(0.85,"#145F8A");oG.addColorStop(1,"#0A3A5C");ctx.fillStyle=oG;ctx.fill();
     ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
+    // Graticules
     ctx.strokeStyle="rgba(255,255,255,0.05)";ctx.lineWidth=0.5;
-    for(let lat=-80;lat<=80;lat+=20){ctx.beginPath();let s=false;for(let lon=-180;lon<=180;lon+=3){const p=proj(lat,lon);if(p){if(!s){ctx.moveTo(p.x,p.y);s=true;}else ctx.lineTo(p.x,p.y);}else s=false;}ctx.stroke();}
-    for(let lon=-180;lon<=180;lon+=30){ctx.beginPath();let s=false;for(let lat=-90;lat<=90;lat+=3){const p=proj(lat,lon);if(p){if(!s){ctx.moveTo(p.x,p.y);s=true;}else ctx.lineTo(p.x,p.y);}else s=false;}ctx.stroke();}
-    for(let fi=0;fi<feats.length;fi++){const f=feats[fi];const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly){const segs=clipRing(ring,rotation.lat,rotation.lon,R,cx,cy);for(const seg of segs){ctx.beginPath();ctx.moveTo(seg[0].x+3,seg[0].y+4);for(let i=1;i<seg.length;i++)ctx.lineTo(seg[i].x+3,seg[i].y+4);ctx.fillStyle="rgba(0,20,40,0.3)";ctx.fill();}}}
-    for(let fi=0;fi<feats.length;fi++){const f=feats[fi];const colors=featColors[fi];const polys=f.type==="MultiPolygon"?f.coords:[f.coords];for(const poly of polys)for(const ring of poly){const segs=clipRing(ring,rotation.lat,rotation.lon,R,cx,cy);for(const seg of segs){ctx.beginPath();ctx.moveTo(seg[0].x,seg[0].y);for(let i=1;i<seg.length;i++)ctx.lineTo(seg[i].x,seg[i].y);ctx.fillStyle=colors.fill;ctx.fill();ctx.strokeStyle=colors.stroke;ctx.lineWidth=0.6;ctx.stroke();}}}
+    const grat=d3.geoGraticule().step([30,20])();
+    ctx.beginPath();pathGen.context(ctx)(grat);ctx.stroke();
+    // Shadow layer
+    const shadowProj=d3.geoOrthographic().translate([cx+3,cy+4]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(0.5);
+    const shadowPath=d3.geoPath(shadowProj).context(ctx);
+    for(let fi=0;fi<feats.length;fi++){ctx.beginPath();shadowPath(feats[fi].geometry);ctx.fillStyle="rgba(0,20,40,0.3)";ctx.fill();}
+    // Countries
+    for(let fi=0;fi<feats.length;fi++){
+      const colors=featColors[fi];
+      ctx.beginPath();pathGen.context(ctx)(feats[fi].geometry);
+      ctx.fillStyle=colors.fill;ctx.fill();ctx.strokeStyle=colors.stroke;ctx.lineWidth=0.6;ctx.stroke();
+    }
+    // Atmosphere overlay
     const aG=ctx.createRadialGradient(cx-R*0.35,cy-R*0.35,0,cx,cy,R);aG.addColorStop(0,"rgba(255,255,255,0.08)");aG.addColorStop(0.4,"rgba(255,255,255,0.02)");aG.addColorStop(0.75,"rgba(0,0,0,0.02)");aG.addColorStop(1,"rgba(0,20,50,0.15)");ctx.fillStyle=aG;ctx.fillRect(0,0,dims.w,dims.h);
     ctx.restore();
+    // Globe border
     ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.strokeStyle="rgba(42,166,212,0.3)";ctx.lineWidth=2;ctx.stroke();
     const oGl=ctx.createRadialGradient(cx,cy,R-2,cx,cy,R+12);oGl.addColorStop(0,"rgba(42,166,212,0.12)");oGl.addColorStop(0.5,"rgba(42,166,212,0.04)");oGl.addColorStop(1,"rgba(42,166,212,0)");ctx.fillStyle=oGl;ctx.beginPath();ctx.arc(cx,cy,R+12,0,Math.PI*2);ctx.fill();
+    // Photo pins
     const pinR=Math.max(8,Math.min(18,10*globeScale));
     for(const photo of photos){const p=proj(photo.lat,photo.lon);if(!p)continue;const sel=photo.id===selectedId,hov=photo.id===hovered.current;const r=sel?pinR*1.7:hov?pinR*1.3:pinR;
       if(sel){ctx.beginPath();ctx.arc(p.x,p.y,r+14,0,Math.PI*2);ctx.fillStyle="rgba(255,107,53,0.12)";ctx.fill();ctx.beginPath();ctx.arc(p.x,p.y,r+7,0,Math.PI*2);ctx.fillStyle="rgba(255,107,53,0.18)";ctx.fill();}
@@ -164,7 +136,7 @@ function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,on
       ctx.beginPath();ctx.arc(p.x,p.y,r*0.28,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fill();
       if(sel||hov){const lbl=photo.city;ctx.font='600 12px "DM Sans",system-ui,sans-serif';const tw=ctx.measureText(lbl).width;const by=p.y-r-30;ctx.fillStyle="rgba(10,20,30,0.92)";ctx.beginPath();ctx.roundRect(p.x-tw/2-10,by,tw+20,26,8);ctx.fill();ctx.beginPath();ctx.moveTo(p.x-5,by+26);ctx.lineTo(p.x+5,by+26);ctx.lineTo(p.x,by+32);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(lbl,p.x,by+13);}}
     if(loading){ctx.fillStyle="#8AD";ctx.font='500 14px "DM Sans",sans-serif';ctx.textAlign="center";ctx.fillText("Loading globe...",cx,cy);}
-  },[dims,feats,featColors,photos,selectedId,rotation,R,cx,cy,proj,loading,globeScale]);
+  },[dims,feats,featColors,photos,selectedId,rotation,R,cx,cy,proj,pathGen,projection,loading,globeScale]);
 
   useEffect(()=>{const f=requestAnimationFrame(draw);return()=>cancelAnimationFrame(f);},[draw]);
   const hitTest=useCallback((mx,my)=>{const pinR=Math.max(8,Math.min(18,10*globeScale));for(let i=photos.length-1;i>=0;i--){const p=proj(photos[i].lat,photos[i].lon);if(p&&Math.hypot(mx-p.x,my-p.y)<pinR+10)return photos[i].id;}return null;},[photos,proj,globeScale]);
