@@ -323,9 +323,9 @@ function PhotoListItem({photo,selected,onClick}){
 function GlobeNav({onNavigate}){
   return(<div style={{position:"absolute",top:0,left:0,right:0,zIndex:60,display:"flex",alignItems:"center",justifyContent:"center",padding:"12px 20px",pointerEvents:"none"}}>
     <div style={{display:"flex",gap:4,background:"rgba(10,22,32,0.85)",borderRadius:12,padding:"4px",border:"1px solid #1A3040",backdropFilter:"blur(12px)",pointerEvents:"auto"}}>
-      {[{id:"home",label:"Home"},{id:"how",label:"How It Works"},{id:"deals",label:"Deals"},{id:"globe",label:"Globe",active:true},{id:"about",label:"About"},{id:"contact",label:"Get Started"}].map(t=>(
-        <button key={t.id} onClick={()=>onNavigate&&onNavigate(t.id)} style={{padding:"8px 16px",borderRadius:8,border:"none",background:t.active?"rgba(42,166,212,0.2)":"transparent",color:t.active?"#2AA6D4":"#5A8CA8",fontSize:12,fontWeight:t.active?700:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif"}}>{t.label}</button>
-      ))}
+      <button onClick={()=>onNavigate&&onNavigate("home")} style={{padding:"8px 16px",borderRadius:8,border:"none",background:"transparent",color:"#5A8CA8",fontSize:12,fontWeight:500,cursor:"pointer",fontFamily:"'DM Sans',sans-serif",display:"flex",alignItems:"center",gap:6}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>Back to Site</button>
+      <div style={{padding:"8px 16px",borderRadius:8,background:"rgba(42,166,212,0.2)",color:"#2AA6D4",fontSize:12,fontWeight:700,fontFamily:"'DM Sans',sans-serif"}}>Globe</div>
     </div>
   </div>);
 }

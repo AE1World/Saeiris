@@ -1,697 +1,333 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import PhotoGlobe from "./photoglobe";
 
-// ═══════════════════════════════════════════════════════════
-// AE-1 VIEWPOINT — Travel Agency + Film Camera Experience
-// ═══════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+// AE-1 VIEWPOINT — Full Website with Snap-Scroll Sections
+// ══════════════════════════════════════════════════════════════
 
-// Aesthetic: Editorial warmth meets analog nostalgia
-// Fonts: Playfair Display (editorial headlines) + Libre Franklin (clean body)
-// Colors: Cream (#FAF8F4) + Burnt Orange (#E8622A) + Warm Charcoal (#2A2A2A)
+const SECTIONS = ["Home","How It Works","Travel Guides","About","Get Started"];
 
-const COLORS = {
-  cream: "#FAF8F4",
-  warmWhite: "#FFF9F2",
-  orange: "#E8622A",
-  orangeLight: "#F0864E",
-  orangeGlow: "rgba(232,98,42,0.08)",
-  orangeGlow2: "rgba(232,98,42,0.15)",
-  charcoal: "#2A2A2A",
-  darkText: "#1E1E1E",
-  bodyText: "#4A4A4A",
-  muted: "#8A8580",
-  border: "#E8E4DE",
-  borderLight: "#F0EDE8",
-  cardBg: "#FFFFFF",
-};
-
-const BEACH_PLACEHOLDER = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920&q=80";
-const FILM_TEXTURE = "https://images.unsplash.com/photo-1495837174058-628aafc7d610?w=1920&q=80";
-const CAMERA_IMG = "https://images.unsplash.com/photo-1452780212940-6f5c0d14d848?w=800&q=80";
-
-function NavBar({ activePage, onNavigate, scrolled }) {
-  const links = [
-    { id: "home", label: "Home" },
-    { id: "how", label: "How It Works" },
-    { id: "deals", label: "Deals & Experiences" },
-    { id: "globe", label: "PhotoGlobe" },
-    { id: "about", label: "About" },
-    { id: "contact", label: "Get Started" },
-  ];
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <nav style={{
-      position: "fixed", top: 0, left: 0, right: 0, zIndex: 1000,
-      background: scrolled ? "rgba(250,248,244,0.95)" : "transparent",
-      backdropFilter: scrolled ? "blur(20px)" : "none",
-      borderBottom: scrolled ? `1px solid ${COLORS.border}` : "1px solid transparent",
-      transition: "all 0.4s ease",
-    }}>
-      <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 72 }}>
-        <div onClick={() => onNavigate("home")} style={{ cursor: "pointer", display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{
-            width: 38, height: 38, borderRadius: "50%", border: `2px solid ${scrolled ? COLORS.orange : "#fff"}`,
-            display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.4s",
-          }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={scrolled ? COLORS.orange : "#fff"} strokeWidth="2">
-              <rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="7" r="1" fill={scrolled ? COLORS.orange : "#fff"}/>
-            </svg>
-          </div>
-          <div>
-            <div style={{
-              fontSize: 17, fontWeight: 700, fontFamily: "'Playfair Display',serif",
-              color: scrolled ? COLORS.charcoal : "#fff", letterSpacing: "0.02em", transition: "color 0.4s",
-            }}>AE-1 Viewpoint</div>
-          </div>
-        </div>
-
-        {/* Desktop nav */}
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }} className="desktop-nav">
-          {links.map(l => (
-            <button key={l.id} onClick={() => onNavigate(l.id)}
-              style={{
-                padding: "8px 16px", borderRadius: 24, border: "none", cursor: "pointer",
-                fontSize: 13, fontWeight: activePage === l.id ? 700 : 500,
-                fontFamily: "'Libre Franklin',sans-serif", letterSpacing: "0.01em",
-                background: activePage === l.id ? (scrolled ? COLORS.orangeGlow2 : "rgba(255,255,255,0.15)") : "transparent",
-                color: activePage === l.id
-                  ? (scrolled ? COLORS.orange : "#fff")
-                  : (scrolled ? COLORS.bodyText : "rgba(255,255,255,0.8)"),
-                transition: "all 0.3s",
-              }}
-              onMouseOver={e => { if (activePage !== l.id) e.currentTarget.style.background = scrolled ? COLORS.orangeGlow : "rgba(255,255,255,0.1)"; }}
-              onMouseOut={e => { if (activePage !== l.id) e.currentTarget.style.background = "transparent"; }}
-            >{l.label}</button>
-          ))}
-        </div>
-
-        {/* Mobile menu button */}
-        <button onClick={() => setMenuOpen(!menuOpen)} className="mobile-menu-btn"
-          style={{ display: "none", background: "none", border: "none", cursor: "pointer", padding: 8 }}>
-          <svg width="24" height="24" viewBox="0 0 24 24" stroke={scrolled ? COLORS.charcoal : "#fff"} strokeWidth="2" fill="none">
-            {menuOpen ? <path d="M18 6L6 18M6 6l12 12"/> : <><path d="M3 12h18"/><path d="M3 6h18"/><path d="M3 18h18"/></>}
-          </svg>
+// ── Section Navigation (left sidebar dots) ──
+function SectionNav({active,onNav}){
+  return(
+    <div style={{position:"fixed",left:28,top:"50%",transform:"translateY(-50%)",zIndex:100,display:"flex",flexDirection:"column",gap:20,alignItems:"flex-start"}}>
+      {SECTIONS.map((s,i)=>(
+        <button key={s} onClick={()=>onNav(i)} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",padding:0}}>
+          <div style={{width:active===i?10:6,height:active===i?10:6,borderRadius:"50%",background:active===i?"#C8956C":"rgba(255,255,255,0.25)",transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)",boxShadow:active===i?"0 0 12px rgba(200,149,108,0.4)":"none"}}/>
+          <span style={{fontSize:10,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:active===i?"#C8956C":"rgba(255,255,255,0.3)",transition:"all 0.4s",fontFamily:"'Cormorant Garamond',serif",whiteSpace:"nowrap"}}>{s}</span>
         </button>
+      ))}
+    </div>
+  );
+}
+
+// ── Globe Tab (top right) ──
+function GlobeTab({onClick}){
+  return(
+    <button onClick={onClick} style={{position:"fixed",top:28,right:32,zIndex:100,display:"flex",alignItems:"center",gap:8,padding:"10px 20px",borderRadius:40,background:"rgba(15,25,35,0.7)",border:"1px solid rgba(200,149,108,0.25)",color:"#C8956C",cursor:"pointer",backdropFilter:"blur(16px)",fontSize:12,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:"'Cormorant Garamond',serif",transition:"all 0.3s"}}
+      onMouseOver={e=>{e.currentTarget.style.background="rgba(200,149,108,0.12)";e.currentTarget.style.borderColor="rgba(200,149,108,0.5)";}}
+      onMouseOut={e=>{e.currentTarget.style.background="rgba(15,25,35,0.7)";e.currentTarget.style.borderColor="rgba(200,149,108,0.25)";}}>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      Globe
+    </button>
+  );
+}
+
+// ── Section 1: Hero / Landing ──
+function HeroSection(){
+  return(
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,#F5F0EB 0%,#E8E2DA 50%,#DDD5CC 100%)"}}>
+        <div style={{position:"absolute",inset:0,opacity:0.06,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")"}}/>
       </div>
-
-      {/* Mobile dropdown */}
-      {menuOpen && (
-        <div style={{ background: "rgba(250,248,244,0.98)", backdropFilter: "blur(20px)", padding: "12px 40px 24px", borderBottom: `1px solid ${COLORS.border}` }}>
-          {links.map(l => (
-            <button key={l.id} onClick={() => { onNavigate(l.id); setMenuOpen(false); }}
-              style={{
-                display: "block", width: "100%", textAlign: "left", padding: "14px 0",
-                background: "none", border: "none", borderBottom: `1px solid ${COLORS.borderLight}`,
-                fontSize: 15, fontWeight: activePage === l.id ? 700 : 400, color: activePage === l.id ? COLORS.orange : COLORS.bodyText,
-                fontFamily: "'Libre Franklin',sans-serif", cursor: "pointer",
-              }}
-            >{l.label}</button>
-          ))}
+      <div style={{position:"absolute",bottom:0,left:0,right:0,height:"40%",display:"flex",alignItems:"flex-end",justifyContent:"center"}}>
+        <div style={{width:"80%",maxWidth:1100,height:"85%",borderRadius:"4px 4px 0 0",border:"2px dashed rgba(160,140,120,0.3)",display:"flex",alignItems:"center",justifyContent:"center",color:"rgba(120,100,80,0.5)",fontSize:14,fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.05em"}}>
+          Drop your hero image here (1920×1080 — Canon AE-1, Kodak film, Tuscany book)
         </div>
-      )}
-    </nav>
-  );
-}
-
-// ── HERO / LANDING PAGE ──
-function HomePage({ onNavigate }) {
-  const [loaded, setLoaded] = useState(false);
-  useEffect(() => { setTimeout(() => setLoaded(true), 100); }, []);
-
-  return (
-    <div>
-      {/* Hero */}
-      <section style={{
-        position: "relative", height: "100vh", minHeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
-        overflow: "hidden",
-      }}>
-        <div style={{
-          position: "absolute", inset: 0,
-          backgroundImage: `url(${BEACH_PLACEHOLDER})`,
-          backgroundSize: "cover", backgroundPosition: "center 40%",
-          filter: "brightness(0.55) contrast(1.1) saturate(0.85)",
-          transform: "scale(1.05)",
-        }}/>
-        {/* Film grain overlay */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "repeating-linear-gradient(0deg, rgba(0,0,0,0.03) 0px, transparent 1px, transparent 2px)",
-          mixBlendMode: "multiply", opacity: 0.5,
-        }}/>
-        {/* Warm vignette */}
-        <div style={{
-          position: "absolute", inset: 0,
-          background: "radial-gradient(ellipse at center, transparent 40%, rgba(42,42,42,0.5) 100%)",
-        }}/>
-
-        <div style={{
-          position: "relative", zIndex: 2, textAlign: "center", maxWidth: 800, padding: "0 32px",
-          opacity: loaded ? 1 : 0, transform: loaded ? "translateY(0)" : "translateY(30px)",
-          transition: "all 1.2s cubic-bezier(0.16,1,0.3,1)",
-        }}>
-          <div style={{
-            display: "inline-block", padding: "6px 20px", borderRadius: 24,
-            border: "1px solid rgba(255,255,255,0.25)", background: "rgba(255,255,255,0.08)",
-            backdropFilter: "blur(10px)", fontSize: 12, fontWeight: 600,
-            color: "rgba(255,255,255,0.9)", letterSpacing: "0.15em", textTransform: "uppercase",
-            fontFamily: "'Libre Franklin',sans-serif", marginBottom: 28,
-          }}>Travel + Film Photography</div>
-
-          <h1 style={{
-            fontSize: "clamp(42px, 7vw, 80px)", fontFamily: "'Playfair Display',serif",
-            fontWeight: 700, color: "#fff", lineHeight: 1.05, margin: "0 0 24px",
-            letterSpacing: "-0.02em",
-          }}>
-            See the World.<br/>
-            <span style={{ color: COLORS.orange, fontStyle: "italic" }}>Shoot It on Film.</span>
-          </h1>
-
-          <p style={{
-            fontSize: "clamp(16px, 2vw, 20px)", color: "rgba(255,255,255,0.8)",
-            lineHeight: 1.65, maxWidth: 560, margin: "0 auto 44px",
-            fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300,
-          }}>
-            We plan your dream trip, handle every detail, and ship you a Canon AE-1
-            with a roll of 36 exposures. Travel with intention. Come home with something real.
-          </p>
-
-          <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-            <button onClick={() => onNavigate("contact")} style={{
-              padding: "16px 36px", borderRadius: 32, border: "none",
-              background: COLORS.orange, color: "#fff", fontSize: 15, fontWeight: 600,
-              fontFamily: "'Libre Franklin',sans-serif", cursor: "pointer",
-              boxShadow: "0 8px 32px rgba(232,98,42,0.4)",
-              transition: "all 0.3s",
-            }}
-              onMouseOver={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 12px 40px rgba(232,98,42,0.5)"; }}
-              onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 32px rgba(232,98,42,0.4)"; }}
-            >Plan My Trip</button>
-
-            <button onClick={() => onNavigate("how")} style={{
-              padding: "16px 36px", borderRadius: 32,
-              border: "1px solid rgba(255,255,255,0.35)", background: "rgba(255,255,255,0.08)",
-              backdropFilter: "blur(10px)", color: "#fff", fontSize: 15, fontWeight: 500,
-              fontFamily: "'Libre Franklin',sans-serif", cursor: "pointer",
-              transition: "all 0.3s",
-            }}
-              onMouseOver={e => { e.currentTarget.style.background = "rgba(255,255,255,0.15)"; }}
-              onMouseOut={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-            >How It Works</button>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div style={{
-          position: "absolute", bottom: 40, left: "50%", transform: "translateX(-50%)",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 8,
-          opacity: loaded ? 0.6 : 0, transition: "opacity 1.5s ease 0.8s",
-        }}>
-          <span style={{ fontSize: 11, color: "#fff", letterSpacing: "0.15em", textTransform: "uppercase", fontFamily: "'Libre Franklin',sans-serif" }}>Scroll</span>
-          <div style={{ width: 1, height: 32, background: "linear-gradient(to bottom, rgba(255,255,255,0.6), transparent)" }}/>
-        </div>
-      </section>
-
-      {/* Intro strip */}
-      <section style={{ background: COLORS.cream, padding: "100px 40px", textAlign: "center" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <h2 style={{
-            fontSize: "clamp(28px, 4vw, 44px)", fontFamily: "'Playfair Display',serif",
-            fontWeight: 700, color: COLORS.charcoal, lineHeight: 1.15, margin: "0 0 24px",
-          }}>
-            Not Just a Trip.<br/>A <span style={{ color: COLORS.orange, fontStyle: "italic" }}>Memory</span> You Can Hold.
-          </h2>
-          <p style={{
-            fontSize: 17, color: COLORS.bodyText, lineHeight: 1.75, fontFamily: "'Libre Franklin',sans-serif",
-            fontWeight: 300,
-          }}>
-            We take care of every detail — flights, accommodation, excursions, and communication with hosts.
-            But what sets us apart is what arrives at your door before you leave: a vintage Canon AE-1
-            loaded with a fresh roll of 36 exposures. No filters. No edits. Just you and the world.
-          </p>
-        </div>
-      </section>
-
-      {/* 3 Feature Cards */}
-      <section style={{ background: COLORS.warmWhite, padding: "80px 40px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 28 }}>
-          {[
-            { icon: "✈", title: "Full-Service Planning", desc: "Flights, hotels, excursions — we handle everything. We negotiate directly with hosts to get you the best rates.", color: "#E8622A" },
-            { icon: "📷", title: "Canon AE-1 Experience", desc: "A vintage film camera shipped to your door before departure. 36 shots to capture your journey the analog way.", color: "#C4550F" },
-            { icon: "🌍", title: "Join the Globe", desc: "Your developed photos join our interactive PhotoGlobe — a growing map of real travel moments from real cameras.", color: "#A8460A" },
-          ].map((f, i) => (
-            <div key={i} style={{
-              background: COLORS.cardBg, borderRadius: 20, padding: "44px 36px",
-              border: `1px solid ${COLORS.border}`,
-              transition: "all 0.3s", cursor: "default",
-            }}
-              onMouseOver={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 16px 48px rgba(0,0,0,0.06)"; }}
-              onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-            >
-              <div style={{
-                width: 56, height: 56, borderRadius: 16, background: COLORS.orangeGlow2,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 26, marginBottom: 24,
-              }}>{f.icon}</div>
-              <h3 style={{ fontSize: 21, fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 12px" }}>{f.title}</h3>
-              <p style={{ fontSize: 15, color: COLORS.bodyText, lineHeight: 1.7, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, margin: 0 }}>{f.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA banner */}
-      <section style={{
-        background: COLORS.charcoal, padding: "80px 40px", textAlign: "center",
-        position: "relative", overflow: "hidden",
-      }}>
-        <div style={{
-          position: "absolute", inset: 0, opacity: 0.04,
-          background: "repeating-linear-gradient(45deg, #fff 0px, transparent 1px, transparent 8px)",
-        }}/>
-        <div style={{ position: "relative", maxWidth: 600, margin: "0 auto" }}>
-          <h2 style={{
-            fontSize: "clamp(26px, 4vw, 38px)", fontFamily: "'Playfair Display',serif",
-            fontWeight: 700, color: "#fff", margin: "0 0 16px", lineHeight: 1.2,
-          }}>Ready to See the World Differently?</h2>
-          <p style={{ fontSize: 16, color: "rgba(255,255,255,0.65)", marginBottom: 32, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, lineHeight: 1.65 }}>
-            Tell us where you dream of going. We'll take it from there.
-          </p>
-          <button onClick={() => onNavigate("contact")} style={{
-            padding: "16px 40px", borderRadius: 32, border: "none",
-            background: COLORS.orange, color: "#fff", fontSize: 15, fontWeight: 600,
-            fontFamily: "'Libre Franklin',sans-serif", cursor: "pointer",
-            boxShadow: "0 8px 32px rgba(232,98,42,0.35)", transition: "all 0.3s",
-          }}
-            onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"}
-            onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
-          >Get Started</button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-// ── HOW IT WORKS ──
-function HowItWorksPage() {
-  const steps = [
-    { num: "01", title: "Tell Us Your Dream Trip", desc: "Fill out a quick form with your destination ideas, dates, budget, and travel style. We'll take it from there.", icon: "💬" },
-    { num: "02", title: "We Plan Everything", desc: "Flights, accommodation, excursions — we research, negotiate, and book the best options. We communicate directly with hosts to push for the best rates.", icon: "🗺" },
-    { num: "03", title: "Your Camera Arrives", desc: "Before you leave, a Canon AE-1 loaded with a fresh roll of 36 exposures arrives at your door. A simple guide is included — no experience needed.", icon: "📦" },
-    { num: "04", title: "Travel & Shoot", desc: "Experience your trip with intention. 36 shots means every frame matters. No screens, no filters — just you and the moment.", icon: "🌅" },
-    { num: "05", title: "Send It Back", desc: "When you return, ship the camera back to us in the prepaid mailer. We handle the rest.", icon: "📮" },
-    { num: "06", title: "Relive the Magic", desc: "We develop your film and send you the prints and digital scans. With your permission, your best shots join our PhotoGlobe for the world to see.", icon: "✨" },
-  ];
-
-  return (
-    <div style={{ paddingTop: 72 }}>
-      <section style={{ background: COLORS.cream, padding: "80px 40px 40px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 16px" }}>
-          How It <span style={{ color: COLORS.orange, fontStyle: "italic" }}>Works</span>
+      </div>
+      <div style={{position:"relative",zIndex:2,textAlign:"center",marginBottom:"18vh"}}>
+        <div style={{fontSize:13,fontWeight:500,letterSpacing:"0.35em",textTransform:"uppercase",color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",marginBottom:16}}>Est. 2025</div>
+        <h1 style={{fontSize:"clamp(42px,6vw,80px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.05,margin:"0 0 16px",letterSpacing:"-0.02em"}}>
+          AE-1 <span style={{fontStyle:"italic",fontWeight:400}}>Viewpoint</span>
         </h1>
-        <p style={{ fontSize: 17, color: COLORS.muted, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, maxWidth: 500, margin: "0 auto" }}>
-          From first message to developed film — here's the full experience.
+        <p style={{fontSize:16,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.08em",fontWeight:400,maxWidth:500,margin:"0 auto"}}>
+          Curated travel experiences. Captured on film.
         </p>
-      </section>
-
-      <section style={{ background: COLORS.cream, padding: "40px 40px 100px" }}>
-        <div style={{ maxWidth: 680, margin: "0 auto" }}>
-          {steps.map((s, i) => (
-            <div key={i} style={{
-              display: "flex", gap: 32, marginBottom: i < steps.length - 1 ? 0 : 0,
-              position: "relative", paddingBottom: 48,
-            }}>
-              {/* Vertical line */}
-              {i < steps.length - 1 && (
-                <div style={{
-                  position: "absolute", left: 27, top: 60, bottom: 0, width: 2,
-                  background: `linear-gradient(to bottom, ${COLORS.orange}, ${COLORS.border})`,
-                }}/>
-              )}
-              <div style={{
-                width: 56, height: 56, borderRadius: "50%", flexShrink: 0,
-                background: COLORS.orange, color: "#fff",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 15, fontWeight: 800, fontFamily: "'Libre Franklin',sans-serif",
-                boxShadow: "0 4px 20px rgba(232,98,42,0.3)", zIndex: 2,
-              }}>{s.num}</div>
-              <div style={{ paddingTop: 6 }}>
-                <div style={{ fontSize: 13, marginBottom: 8 }}>{s.icon}</div>
-                <h3 style={{ fontSize: 22, fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 8px" }}>{s.title}</h3>
-                <p style={{ fontSize: 15, color: COLORS.bodyText, lineHeight: 1.7, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, margin: 0 }}>{s.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
+        <div style={{width:40,height:1,background:"#C8956C",margin:"28px auto 0"}}/>
+      </div>
+      <div style={{position:"absolute",bottom:36,left:"50%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",alignItems:"center",gap:8,opacity:0.5}}>
+        <span style={{fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif"}}>Scroll</span>
+        <div style={{width:1,height:24,background:"linear-gradient(to bottom,#8A7A68,transparent)"}}/>
+      </div>
+    </section>
   );
 }
 
-// ── DEALS & EXPERIENCES ──
-function DealsPage() {
-  const deals = [
-    { dest: "Bali, Indonesia", price: "1,200", budget: "Budget-Friendly", duration: "7 nights", desc: "Rice terraces, temple visits, surf lessons, and sunset dinners. Includes private villa stay and local guide.", img: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&q=80", tag: "Popular" },
-    { dest: "Amalfi Coast, Italy", price: "2,800", budget: "Mid-Range", duration: "5 nights", desc: "Coastal drives, lemon groves, boat tours, and handmade pasta classes in a cliffside hotel.", img: "https://images.unsplash.com/photo-1534113414509-0eec2bfb493f?w=600&q=80", tag: "Romantic" },
-    { dest: "Tokyo & Kyoto, Japan", price: "3,200", budget: "Mid-Range", duration: "10 nights", desc: "City neon and ancient temples. Street food tours, bullet train, ryokan stay, and cherry blossom walks.", img: "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=600&q=80", tag: "Cultural" },
-    { dest: "Patagonia, Chile", price: "4,500", budget: "Premium", duration: "8 nights", desc: "Glacier trekking, horseback riding, and luxury eco-lodge stays at the edge of the world.", img: "https://images.unsplash.com/photo-1508009603885-50cf7c8a1ee8?w=600&q=80", tag: "Adventure" },
-    { dest: "Marrakech, Morocco", price: "1,600", budget: "Budget-Friendly", duration: "6 nights", desc: "Souks, Sahara camping, camel treks, and traditional riad accommodation in the old medina.", img: "https://images.unsplash.com/photo-1489749798305-4fea3ae63d43?w=600&q=80", tag: "Exotic" },
-    { dest: "Iceland Ring Road", price: "3,800", budget: "Premium", duration: "9 nights", desc: "Waterfalls, geysers, northern lights, and volcanic landscapes. Self-drive with curated stops.", img: "https://images.unsplash.com/photo-1504829857797-ddff29c27927?w=600&q=80", tag: "Photography" },
+// ── Section 2: How It Works ──
+function HowItWorksSection(){
+  const cards=[
+    {icon:"✈",title:"Full-Service Planning",desc:"Flights, hotels, excursions — we handle everything. We negotiate directly with hosts to get you the best rates."},
+    {icon:"📷",title:"Canon AE-1 Experience",desc:"A vintage film camera shipped to your door before departure. 36 shots to capture your journey the analog way."},
+    {icon:"🌍",title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — a growing map of real travel moments from real cameras."}
   ];
-
-  return (
-    <div style={{ paddingTop: 72 }}>
-      <section style={{ background: COLORS.cream, padding: "80px 40px 40px", textAlign: "center" }}>
-        <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 16px" }}>
-          Deals & <span style={{ color: COLORS.orange, fontStyle: "italic" }}>Experiences</span>
-        </h1>
-        <p style={{ fontSize: 17, color: COLORS.muted, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, maxWidth: 520, margin: "0 auto" }}>
-          Curated trips at every budget. Every package includes your Canon AE-1 film camera experience.
+  return(
+    <section style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:900,padding:"0 40px"}}>
+        <h2 style={{fontSize:"clamp(32px,4.5vw,56px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 8px"}}>
+          Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
+        </h2>
+        <p style={{fontSize:15,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.7,maxWidth:620,margin:"20px auto 48px",letterSpacing:"0.02em"}}>
+          We take care of every detail — flights, accommodation, excursions, and communication with hosts. But what sets us apart is what arrives at your door before you leave: a vintage Canon AE-1 loaded with a fresh roll of 36 exposures. No filters. No edits. Just you and the world.
         </p>
-      </section>
-
-      <section style={{ background: COLORS.cream, padding: "40px 40px 100px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))", gap: 24 }}>
-          {deals.map((d, i) => (
-            <div key={i} style={{
-              background: COLORS.cardBg, borderRadius: 20, overflow: "hidden",
-              border: `1px solid ${COLORS.border}`, transition: "all 0.3s", cursor: "pointer",
-            }}
-              onMouseOver={e => { e.currentTarget.style.transform = "translateY(-4px)"; e.currentTarget.style.boxShadow = "0 20px 48px rgba(0,0,0,0.08)"; }}
-              onMouseOut={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "none"; }}
-            >
-              <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
-                <div style={{ width: "100%", height: "100%", backgroundImage: `url(${d.img})`, backgroundSize: "cover", backgroundPosition: "center", transition: "transform 0.5s" }}
-                  className="deal-img"/>
-                <div style={{
-                  position: "absolute", top: 14, left: 14, padding: "5px 14px", borderRadius: 20,
-                  background: "rgba(0,0,0,0.55)", backdropFilter: "blur(10px)",
-                  fontSize: 11, fontWeight: 600, color: "#fff", letterSpacing: "0.05em",
-                  fontFamily: "'Libre Franklin',sans-serif",
-                }}>{d.tag}</div>
-                <div style={{
-                  position: "absolute", top: 14, right: 14, padding: "5px 14px", borderRadius: 20,
-                  background: COLORS.orange, fontSize: 11, fontWeight: 700, color: "#fff",
-                  fontFamily: "'Libre Franklin',sans-serif",
-                }}>{d.budget}</div>
-              </div>
-              <div style={{ padding: "24px 28px 28px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
-                  <h3 style={{ fontSize: 20, fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: 0 }}>{d.dest}</h3>
-                </div>
-                <div style={{ display: "flex", gap: 16, marginBottom: 12, fontSize: 13, color: COLORS.muted, fontFamily: "'Libre Franklin',sans-serif" }}>
-                  <span>{d.duration}</span>
-                  <span style={{ color: COLORS.border }}>·</span>
-                  <span>Canon AE-1 included</span>
-                </div>
-                <p style={{ fontSize: 14, color: COLORS.bodyText, lineHeight: 1.65, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, margin: "0 0 20px" }}>{d.desc}</p>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    <span style={{ fontSize: 12, color: COLORS.muted, fontFamily: "'Libre Franklin',sans-serif" }}>from </span>
-                    <span style={{ fontSize: 26, fontWeight: 800, color: COLORS.orange, fontFamily: "'Libre Franklin',sans-serif" }}>${d.price}</span>
-                    <span style={{ fontSize: 12, color: COLORS.muted }}> /person</span>
-                  </div>
-                  <div style={{
-                    padding: "8px 20px", borderRadius: 20, background: COLORS.orangeGlow2,
-                    color: COLORS.orange, fontSize: 13, fontWeight: 600, fontFamily: "'Libre Franklin',sans-serif",
-                  }}>View Details →</div>
-                </div>
-              </div>
+        <div style={{display:"flex",gap:24,justifyContent:"center",flexWrap:"wrap"}}>
+          {cards.map((c,i)=>(
+            <div key={i} style={{flex:"1 1 260px",maxWidth:300,padding:"36px 28px",borderRadius:16,background:"rgba(245,240,235,0.7)",border:"1px solid rgba(200,180,160,0.2)",textAlign:"left",transition:"all 0.3s"}}
+              onMouseOver={e=>e.currentTarget.style.transform="translateY(-4px)"}
+              onMouseOut={e=>e.currentTarget.style.transform="translateY(0)"}>
+              <div style={{width:48,height:48,borderRadius:12,background:"rgba(200,149,108,0.1)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:22,marginBottom:18}}>{c.icon}</div>
+              <h3 style={{fontSize:17,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 10px",letterSpacing:"0.02em"}}>{c.title}</h3>
+              <p style={{fontSize:13,color:"#8A7A68",lineHeight:1.65,margin:0,fontFamily:"'Cormorant Garamond',serif"}}>{c.desc}</p>
             </div>
           ))}
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
   );
 }
 
-// ── ABOUT ──
-function AboutPage() {
-  return (
-    <div style={{ paddingTop: 72 }}>
-      <section style={{ background: COLORS.cream, padding: "80px 40px 100px" }}>
-        <div style={{ maxWidth: 800, margin: "0 auto" }}>
-          <h1 style={{ fontSize: "clamp(32px, 5vw, 52px)", fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 40px", textAlign: "center" }}>
-            About <span style={{ color: COLORS.orange, fontStyle: "italic" }}>Us</span>
-          </h1>
+// ── Section 3: Travel Guides ──
+const GUIDES=[
+  {city:"Madrid",country:"Spain",img:"https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=600&q=80",tagline:"Tapas, plazas & golden light",budget:"$2,800 – $4,200",duration:"7 nights",highlight:"Rooftop sunset at Círculo de Bellas Artes"},
+  {city:"Tuscany",country:"Italy",img:"https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=600&q=80",tagline:"Rolling hills & Chianti roads",budget:"$3,200 – $5,000",duration:"8 nights",highlight:"Private vineyard tasting in Montalcino"},
+  {city:"Kauai",country:"Hawaii",img:"https://images.unsplash.com/photo-1505852679233-d9fd70aff56d?w=600&q=80",tagline:"The Garden Isle, untouched",budget:"$3,500 – $5,500",duration:"6 nights",highlight:"Nā Pali Coast helicopter tour at sunrise"},
+  {city:"Hvar",country:"Croatia",img:"https://images.unsplash.com/photo-1555990538-1a6f1e437498?w=600&q=80",tagline:"Lavender, stone & Adriatic blue",budget:"$2,400 – $3,800",duration:"5 nights",highlight:"Sunset kayak to the Pakleni Islands"},
+  {city:"Seattle",country:"USA",img:"https://images.unsplash.com/photo-1502175353174-a7a70e73b4c3?w=600&q=80",tagline:"Coffee, rain & emerald views",budget:"$1,800 – $3,000",duration:"4 nights",highlight:"Ferry ride to Bainbridge Island"},
+  {city:"Rome",country:"Italy",img:"https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=600&q=80",tagline:"Eternal city, timeless film",budget:"$2,600 – $4,400",duration:"6 nights",highlight:"Private twilight Colosseum tour"},
+];
 
-          {/* Photo placeholder */}
-          <div style={{
-            width: "100%", height: 400, borderRadius: 24, marginBottom: 48,
-            backgroundImage: `url(${CAMERA_IMG})`,
-            backgroundSize: "cover", backgroundPosition: "center",
-            border: `1px solid ${COLORS.border}`,
-            position: "relative", overflow: "hidden",
-          }}>
-            <div style={{
-              position: "absolute", inset: 0,
-              background: "linear-gradient(to top, rgba(42,42,42,0.6) 0%, transparent 50%)",
-            }}/>
-            <div style={{
-              position: "absolute", bottom: 28, left: 28, color: "#fff",
-              fontFamily: "'Libre Franklin',sans-serif",
-            }}>
-              <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 4, letterSpacing: "0.1em", textTransform: "uppercase" }}>Your photo here</div>
-              <div style={{ fontSize: 18, fontWeight: 600 }}>A photo of you and your wife will go here</div>
-            </div>
-          </div>
-
-          <div style={{ fontFamily: "'Libre Franklin',sans-serif", color: COLORS.bodyText, fontSize: 17, lineHeight: 1.85, fontWeight: 300 }}>
-            <p style={{ marginBottom: 24 }}>
-              We're a husband-and-wife team who believe the best travel memories aren't stored on a phone — they're held in your hands.
-              After years of planning trips for friends and family (and always packing our Canon AE-1), we turned our passion into AE-1 Viewpoint.
-            </p>
-            <p style={{ marginBottom: 24 }}>
-              The idea is simple: we handle every detail of your trip — finding the best flights, negotiating with hosts for the best rates,
-              booking excursions, managing all the back-and-forth communication — so you can focus entirely on the experience.
-            </p>
-            <p style={{ marginBottom: 24 }}>
-              But what makes us different is the camera. Before every trip, we ship you a Canon AE-1 loaded with a fresh roll of 36 exposures.
-              No digital backup. No do-overs. Just 36 chances to capture something real. When you get home, you send the camera back, and we develop your film.
-            </p>
-            <p>
-              The wait. The anticipation. Then the moment you see your photos for the first time — that's the magic we're chasing.
-              And if you'd like, your best shots join our PhotoGlobe: an ever-growing collection of real moments from real travelers, pinned to the places where they happened.
-            </p>
+function GuideModal({guide,onClose}){
+  if(!guide)return null;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.85)",backdropFilter:"blur(20px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:680,maxHeight:"88vh",background:"#FDFBF8",borderRadius:20,overflow:"hidden",boxShadow:"0 40px 120px rgba(0,0,0,0.4)"}}>
+        <div style={{height:280,background:`url(${guide.img}) center/cover`,position:"relative"}}>
+          <button onClick={onClose} style={{position:"absolute",top:16,right:16,width:36,height:36,borderRadius:"50%",background:"rgba(0,0,0,0.4)",border:"none",color:"#fff",fontSize:18,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)"}}>×</button>
+          <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"40px 32px 20px",background:"linear-gradient(transparent,rgba(0,0,0,0.6))"}}>
+            <h3 style={{fontSize:32,fontWeight:300,color:"#fff",fontFamily:"'Cormorant Garamond',serif",margin:0}}>{guide.city}, <span style={{fontStyle:"italic"}}>{guide.country}</span></h3>
           </div>
         </div>
-      </section>
-    </div>
-  );
-}
-
-// ── CONTACT / GET STARTED ──
-function ContactPage() {
-  const [submitted, setSubmitted] = useState(false);
-
-  return (
-    <div style={{ paddingTop: 72 }}>
-      <section style={{ background: COLORS.cream, padding: "80px 40px 100px" }}>
-        <div style={{ maxWidth: 640, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 48 }}>
-            <h1 style={{ fontSize: "clamp(32px, 5vw, 48px)", fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 16px" }}>
-              Let's Plan Your <span style={{ color: COLORS.orange, fontStyle: "italic" }}>Trip</span>
-            </h1>
-            <p style={{ fontSize: 17, color: COLORS.muted, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300 }}>
-              Tell us where you want to go. We'll handle the rest.
-            </p>
-          </div>
-
-          {!submitted ? (
-            <div style={{
-              background: COLORS.cardBg, borderRadius: 24, padding: "44px 40px",
-              border: `1px solid ${COLORS.border}`, boxShadow: "0 8px 32px rgba(0,0,0,0.04)",
-            }}>
-              {[
-                { label: "Your Name", placeholder: "First and last name", type: "text" },
-                { label: "Email", placeholder: "you@example.com", type: "email" },
-                { label: "Where do you want to go?", placeholder: "e.g., Japan, Italy, Bali — or 'surprise me'", type: "text" },
-                { label: "Travel Dates (approximate)", placeholder: "e.g., March 2026, flexible", type: "text" },
-                { label: "Budget Range (per person)", placeholder: "e.g., $1,500 - $3,000", type: "text" },
-                { label: "Group Size", placeholder: "e.g., 2 adults, couple, solo", type: "text" },
-              ].map((field, i) => (
-                <label key={i} style={{ display: "block", marginBottom: 20 }}>
-                  <span style={{
-                    display: "block", fontSize: 12, fontWeight: 600, color: COLORS.muted,
-                    textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8,
-                    fontFamily: "'Libre Franklin',sans-serif",
-                  }}>{field.label}</span>
-                  <input type={field.type} placeholder={field.placeholder} style={{
-                    width: "100%", padding: "14px 18px", borderRadius: 12,
-                    border: `1px solid ${COLORS.border}`, background: COLORS.cream,
-                    fontSize: 15, color: COLORS.charcoal, fontFamily: "'Libre Franklin',sans-serif",
-                    outline: "none", transition: "border-color 0.3s",
-                  }}
-                    onFocus={e => e.currentTarget.style.borderColor = COLORS.orange}
-                    onBlur={e => e.currentTarget.style.borderColor = COLORS.border}
-                  />
-                </label>
-              ))}
-
-              <label style={{ display: "block", marginBottom: 28 }}>
-                <span style={{
-                  display: "block", fontSize: 12, fontWeight: 600, color: COLORS.muted,
-                  textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8,
-                  fontFamily: "'Libre Franklin',sans-serif",
-                }}>Anything else we should know?</span>
-                <textarea placeholder="Special occasions, dietary needs, interests, must-see places..." rows={4} style={{
-                  width: "100%", padding: "14px 18px", borderRadius: 12,
-                  border: `1px solid ${COLORS.border}`, background: COLORS.cream,
-                  fontSize: 15, color: COLORS.charcoal, fontFamily: "'Libre Franklin',sans-serif",
-                  outline: "none", resize: "vertical", transition: "border-color 0.3s",
-                }}
-                  onFocus={e => e.currentTarget.style.borderColor = COLORS.orange}
-                  onBlur={e => e.currentTarget.style.borderColor = COLORS.border}
-                />
-              </label>
-
-              <div style={{
-                padding: "14px 20px", borderRadius: 12, background: COLORS.orangeGlow,
-                border: `1px solid ${COLORS.orangeGlow2}`, marginBottom: 28,
-                display: "flex", alignItems: "center", gap: 12,
-              }}>
-                <span style={{ fontSize: 20 }}>📷</span>
-                <span style={{ fontSize: 13, color: COLORS.bodyText, fontFamily: "'Libre Franklin',sans-serif", lineHeight: 1.5 }}>
-                  Every trip includes our Canon AE-1 film camera experience — shipped to you before departure with a roll of 36 exposures.
-                </span>
+        <div style={{padding:"28px 32px 36px",overflowY:"auto",maxHeight:"calc(88vh - 280px)"}}>
+          <p style={{fontSize:14,color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.1em",textTransform:"uppercase",fontWeight:600,margin:"0 0 16px"}}>{guide.tagline}</p>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:16,marginBottom:24}}>
+            {[{l:"Budget Range",v:guide.budget},{l:"Duration",v:guide.duration},{l:"Highlight",v:guide.highlight}].map((s,i)=>(
+              <div key={i} style={{padding:"14px 16px",borderRadius:10,background:"rgba(200,149,108,0.06)",border:"1px solid rgba(200,149,108,0.12)"}}>
+                <div style={{fontSize:10,color:"#8A7A68",textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:600,marginBottom:6,fontFamily:"'Cormorant Garamond',serif"}}>{s.l}</div>
+                <div style={{fontSize:13,color:"#2A2420",fontWeight:500,fontFamily:"'Cormorant Garamond',serif"}}>{s.v}</div>
               </div>
-
-              <button onClick={() => setSubmitted(true)} style={{
-                width: "100%", padding: "16px", borderRadius: 12, border: "none",
-                background: COLORS.orange, color: "#fff", fontSize: 16, fontWeight: 700,
-                fontFamily: "'Libre Franklin',sans-serif", cursor: "pointer",
-                boxShadow: "0 8px 32px rgba(232,98,42,0.3)", transition: "all 0.3s",
-              }}
-                onMouseOver={e => e.currentTarget.style.transform = "translateY(-2px)"}
-                onMouseOut={e => e.currentTarget.style.transform = "translateY(0)"}
-              >Send My Trip Request</button>
-            </div>
-          ) : (
-            <div style={{
-              background: COLORS.cardBg, borderRadius: 24, padding: "64px 40px", textAlign: "center",
-              border: `1px solid ${COLORS.border}`,
-            }}>
-              <div style={{
-                width: 72, height: 72, borderRadius: "50%", background: "rgba(34,197,94,0.1)",
-                margin: "0 auto 24px", display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="#22c55e"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-              </div>
-              <h2 style={{ fontSize: 28, fontFamily: "'Playfair Display',serif", fontWeight: 700, color: COLORS.charcoal, margin: "0 0 12px" }}>We're On It!</h2>
-              <p style={{ fontSize: 16, color: COLORS.muted, fontFamily: "'Libre Franklin',sans-serif", fontWeight: 300, lineHeight: 1.65 }}>
-                We'll be in touch within 24 hours with trip ideas tailored just for you. Start dreaming — we'll handle the rest.
-              </p>
-            </div>
-          )}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-// ── GLOBE PAGE (wrapper) ──
-function GlobePage() {
-  return (
-    <div style={{ paddingTop: 0, height: "100vh" }}>
-      <PhotoGlobe />
-    </div>
-  );
-}
-
-// ── FOOTER ──
-function Footer({ onNavigate }) {
-  return (
-    <footer style={{
-      background: COLORS.charcoal, padding: "64px 40px 40px", color: "rgba(255,255,255,0.6)",
-      fontFamily: "'Libre Franklin',sans-serif",
-    }}>
-      <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 40 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 32, height: 32, borderRadius: "50%", border: `1.5px solid ${COLORS.orange}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={COLORS.orange} strokeWidth="2"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="4"/></svg>
-            </div>
-            <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: "'Playfair Display',serif" }}>AE-1 Viewpoint</span>
-          </div>
-          <p style={{ fontSize: 13, lineHeight: 1.65, maxWidth: 280, margin: 0 }}>
-            Travel planning + film photography.<br/>See the world. Shoot it on film.
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: 60, flexWrap: "wrap" }}>
-          <div>
-            <div style={{ fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.12em", marginBottom: 16 }}>Navigate</div>
-            {["home","how","deals","globe","about","contact"].map(id => (
-              <div key={id}><button onClick={() => onNavigate(id)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.6)", fontSize: 13, cursor: "pointer", padding: "6px 0", fontFamily: "'Libre Franklin',sans-serif", display: "block" }}
-                onMouseOver={e => e.currentTarget.style.color = COLORS.orange}
-                onMouseOut={e => e.currentTarget.style.color = "rgba(255,255,255,0.6)"}
-              >{{home:"Home",how:"How It Works",deals:"Deals",globe:"PhotoGlobe",about:"About",contact:"Get Started"}[id]}</button></div>
             ))}
           </div>
+          <h4 style={{fontSize:16,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 12px"}}>What's Included</h4>
+          <p style={{fontSize:13,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,marginBottom:24}}>
+            Round-trip flights & airport transfers · Hand-picked accommodations (boutique hotels & Airbnbs) · Custom day-by-day itinerary with restaurant reservations · Canon AE-1 camera + Kodak UltraMax 400 film shipped to your door · Film development & high-res scans after your trip · Emergency travel support throughout your journey
+          </p>
+          <h4 style={{fontSize:16,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 12px"}}>Sample Itinerary</h4>
+          <p style={{fontSize:13,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,marginBottom:24}}>
+            <strong>Day 1:</strong> Arrival & neighborhood orientation walk · <strong>Day 2:</strong> Guided cultural excursion & local market visit · <strong>Day 3:</strong> Free exploration day with curated recommendations · <strong>Day 4:</strong> Signature experience ({guide.highlight}) · <strong>Day 5+:</strong> Additional adventures tailored to your interests · <strong>Final Day:</strong> Farewell breakfast & departure
+          </p>
+          <h4 style={{fontSize:16,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 12px"}}>Restaurant Picks</h4>
+          <p style={{fontSize:13,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:0}}>
+            We research and reserve tables at the best local restaurants — from hidden family-run spots to celebrated dining rooms. Each guide includes 4–6 curated restaurant recommendations with reservation details, dress code, and our personal menu picks.
+          </p>
         </div>
       </div>
-      <div style={{ maxWidth: 1100, margin: "40px auto 0", paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.08)", fontSize: 12, color: "rgba(255,255,255,0.3)", textAlign: "center" }}>
-        © {new Date().getFullYear()} AE-1 Viewpoint. All rights reserved.
-      </div>
-    </footer>
+    </div>
   );
 }
 
-// ── MAIN APP ──
-export default function App() {
-  const [page, setPage] = useState("home");
-  const [scrolled, setScrolled] = useState(false);
-  const contentRef = useRef(null);
+function TravelGuidesSection(){
+  const[selected,setSelected]=useState(null);
+  return(
+    <section style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"#F5F0EB",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:1100,padding:"0 40px",width:"100%"}}>
+        <h2 style={{fontSize:"clamp(28px,4vw,48px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 6px"}}>
+          Travel Guide <span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
+        </h2>
+        <p style={{fontSize:14,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 40px",letterSpacing:"0.03em"}}>
+          Click any destination to explore a complete sample guide
+        </p>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:20}}>
+          {GUIDES.map((g,i)=>(
+            <div key={i} onClick={()=>setSelected(g)} style={{cursor:"pointer",position:"relative",borderRadius:8,overflow:"hidden",aspectRatio:"4/5",background:"#E8E2DA",boxShadow:"6px 8px 24px rgba(40,30,20,0.12),0 1px 2px rgba(0,0,0,0.06)",transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)",border:"6px solid #F5F0EB"}}
+              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-6px) scale(1.02)";e.currentTarget.style.boxShadow="8px 12px 36px rgba(40,30,20,0.2),0 2px 4px rgba(0,0,0,0.08)";}}
+              onMouseOut={e=>{e.currentTarget.style.transform="translateY(0) scale(1)";e.currentTarget.style.boxShadow="6px 8px 24px rgba(40,30,20,0.12),0 1px 2px rgba(0,0,0,0.06)";}}>
+              <img src={g.img} alt={g.city} style={{width:"100%",height:"100%",objectFit:"cover"}}/>
+              <div style={{position:"absolute",bottom:0,left:0,right:0,padding:"32px 16px 14px",background:"linear-gradient(transparent,rgba(0,0,0,0.55))"}}>
+                <div style={{fontSize:18,fontWeight:400,color:"#fff",fontFamily:"'Cormorant Garamond',serif"}}>{g.city}</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.7)",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.05em"}}>{g.country}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+      <GuideModal guide={selected} onClose={()=>setSelected(null)}/>
+    </section>
+  );
+}
 
-  const navigate = useCallback((p) => {
-    setPage(p);
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, []);
+// ── Section 4: About ──
+function AboutSection(){
+  return(
+    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#2A2420",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",gap:60,maxWidth:1100,padding:"0 60px",width:"100%"}}>
+        <div style={{flex:"0 0 420px",height:500,borderRadius:12,background:"linear-gradient(135deg,#3A3430,#4A4035)",border:"1px solid rgba(200,149,108,0.15)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>
+          <div style={{textAlign:"center",color:"rgba(200,149,108,0.4)",fontFamily:"'Cormorant Garamond',serif"}}>
+            <div style={{fontSize:48,marginBottom:12}}>📸</div>
+            <div style={{fontSize:14,letterSpacing:"0.05em"}}>Your photo here</div>
+          </div>
+        </div>
+        <div style={{flex:1}}>
+          <div style={{fontSize:11,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Our Story</div>
+          <h2 style={{fontSize:"clamp(30px,3.5vw,44px)",fontWeight:300,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.2,margin:"0 0 24px"}}>
+            Built on a love of<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>travel & film</span>
+          </h2>
+          <p style={{fontSize:15,color:"rgba(245,240,235,0.65)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 18px"}}>
+            We're Josh and Sarah — a couple who fell in love with the world through the viewfinder of a 1976 Canon AE-1. What started as a hobby on our honeymoon in Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.
+          </p>
+          <p style={{fontSize:15,color:"rgba(245,240,235,0.65)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:0}}>
+            AE-1 Viewpoint was born from the belief that the best trips aren't the most expensive ones — they're the most intentional. We plan every detail so you can be present, camera in hand, capturing moments the way they were meant to be captured. No screens. No algorithms. Just light, film, and the world in front of you.
+          </p>
+          <div style={{width:40,height:1,background:"#C8956C",marginTop:28}}/>
+        </div>
+      </div>
+    </section>
+  );
+}
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+// ── Section 5: Get Started ──
+function GetStartedSection(){
+  const[form,setForm]=useState({name:"",email:"",destination:"",travelers:"",dates:"",message:""});
+  const[submitted,setSubmitted]=useState(false);
+  const up=(k,v)=>setForm(p=>({...p,[k]:v}));
+  const iS={width:"100%",padding:"13px 16px",borderRadius:10,border:"1px solid rgba(200,149,108,0.2)",background:"rgba(245,240,235,0.5)",color:"#2A2420",fontSize:14,fontFamily:"'Cormorant Garamond',serif",outline:"none",transition:"border-color 0.3s"};
+  return(
+    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:560,width:"100%",padding:"0 40px"}}>
+        <div style={{fontSize:11,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Start Your Journey</div>
+        <h2 style={{fontSize:"clamp(28px,4vw,44px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 8px"}}>
+          Let's Plan<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Something Beautiful</span>
+        </h2>
+        <p style={{fontSize:14,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 36px",lineHeight:1.6}}>
+          Tell us where you'd love to go. We'll handle the rest — from flights and stays to a loaded Canon AE-1 at your doorstep.
+        </p>
+        {submitted?(
+          <div style={{padding:"40px",borderRadius:16,background:"rgba(200,149,108,0.06)",border:"1px solid rgba(200,149,108,0.15)"}}>
+            <div style={{fontSize:36,marginBottom:12}}>✈️</div>
+            <div style={{fontSize:20,fontWeight:400,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:8}}>We'll be in touch!</div>
+            <div style={{fontSize:13,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif"}}>Check your email for next steps.</div>
+          </div>
+        ):(
+          <div style={{display:"flex",flexDirection:"column",gap:14,textAlign:"left"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <input value={form.name} onChange={e=>up("name",e.target.value)} placeholder="Your name" style={iS}/>
+              <input value={form.email} onChange={e=>up("email",e.target.value)} placeholder="Email" type="email" style={iS}/>
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+              <input value={form.destination} onChange={e=>up("destination",e.target.value)} placeholder="Dream destination" style={iS}/>
+              <input value={form.travelers} onChange={e=>up("travelers",e.target.value)} placeholder="Number of travelers" style={iS}/>
+            </div>
+            <input value={form.dates} onChange={e=>up("dates",e.target.value)} placeholder="Preferred travel dates (flexible is fine!)" style={iS}/>
+            <textarea value={form.message} onChange={e=>up("message",e.target.value)} placeholder="Anything else you'd like us to know?" rows={3} style={{...iS,resize:"none"}}/>
+            <button onClick={()=>setSubmitted(true)} style={{width:"100%",padding:"15px",borderRadius:10,background:"#2A2420",color:"#F5F0EB",border:"none",fontSize:14,fontWeight:600,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.08em",transition:"all 0.3s"}}
+              onMouseOver={e=>e.currentTarget.style.background="#C8956C"}
+              onMouseOut={e=>e.currentTarget.style.background="#2A2420"}>
+              Send Inquiry
+            </button>
+            <p style={{fontSize:11,color:"#A89A88",textAlign:"center",fontFamily:"'Cormorant Garamond',serif",margin:0}}>No commitment — just a conversation about your perfect trip.</p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
 
-  const isGlobe = page === "globe";
+// ── Main App ──
+export default function App(){
+  const[page,setPage]=useState("home");
+  const[activeSection,setActiveSection]=useState(0);
+  const containerRef=useRef(null);
+  const isScrolling=useRef(false);
 
-  return (
-    <div style={{
-      minHeight: "100vh",
-      background: COLORS.cream,
-      fontFamily: "'Libre Franklin',sans-serif",
-    }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Libre+Franklin:wght@200;300;400;500;600;700;800&display=swap');
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
-        body { background: ${COLORS.cream}; }
-        ::selection { background: ${COLORS.orangeGlow2}; color: ${COLORS.charcoal}; }
-        input::placeholder, textarea::placeholder { color: #C4C0BA; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: ${COLORS.cream}; }
-        ::-webkit-scrollbar-thumb { background: ${COLORS.border}; border-radius: 3px; }
-        @media (max-width: 768px) {
-          .desktop-nav { display: none !important; }
-          .mobile-menu-btn { display: flex !important; }
-        }
-        @media (min-width: 769px) {
-          .mobile-menu-btn { display: none !important; }
-        }
-      `}</style>
+  const scrollToSection=useCallback((idx)=>{
+    if(idx<0||idx>=SECTIONS.length)return;
+    isScrolling.current=true;
+    setActiveSection(idx);
+    const el=containerRef.current;
+    if(el){
+      el.scrollTo({top:idx*window.innerHeight,behavior:"smooth"});
+      setTimeout(()=>{isScrolling.current=false;},800);
+    }
+  },[]);
 
-      {!isGlobe && <NavBar activePage={page} onNavigate={navigate} scrolled={page === "home" ? scrolled : true} />}
+  useEffect(()=>{
+    if(page!=="home")return;
+    const el=containerRef.current;if(!el)return;
+    let lastWheel=0;
+    const onWheel=(e)=>{
+      e.preventDefault();
+      const now=Date.now();
+      if(now-lastWheel<900||isScrolling.current)return;
+      lastWheel=now;
+      if(e.deltaY>0)scrollToSection(activeSection+1);
+      else if(e.deltaY<0)scrollToSection(activeSection-1);
+    };
+    el.addEventListener("wheel",onWheel,{passive:false});
+    return()=>el.removeEventListener("wheel",onWheel);
+  },[page,activeSection,scrollToSection]);
 
-      <main>
-        {page === "home" && <HomePage onNavigate={navigate} />}
-        {page === "how" && <HowItWorksPage />}
-        {page === "deals" && <DealsPage />}
-        {page === "globe" && <GlobePage />}
-        {page === "about" && <AboutPage />}
-        {page === "contact" && <ContactPage />}
-      </main>
+  useEffect(()=>{
+    if(page!=="home")return;
+    const el=containerRef.current;if(!el)return;
+    let startY=0;
+    const onTS=(e)=>{startY=e.touches[0].clientY;};
+    const onTE=(e)=>{
+      if(isScrolling.current)return;
+      const dy=startY-e.changedTouches[0].clientY;
+      if(Math.abs(dy)>50){
+        if(dy>0)scrollToSection(activeSection+1);
+        else scrollToSection(activeSection-1);
+      }
+    };
+    el.addEventListener("touchstart",onTS,{passive:true});
+    el.addEventListener("touchend",onTE,{passive:true});
+    return()=>{el.removeEventListener("touchstart",onTS);el.removeEventListener("touchend",onTE);};
+  },[page,activeSection,scrollToSection]);
 
-      {!isGlobe && <Footer onNavigate={navigate} />}
+  useEffect(()=>{
+    if(page!=="home")return;
+    const onKey=(e)=>{
+      if(e.key==="ArrowDown"||e.key===" "){e.preventDefault();scrollToSection(activeSection+1);}
+      if(e.key==="ArrowUp"){e.preventDefault();scrollToSection(activeSection-1);}
+    };
+    window.addEventListener("keydown",onKey);
+    return()=>window.removeEventListener("keydown",onKey);
+  },[page,activeSection,scrollToSection]);
+
+  if(page==="globe"){
+    return <PhotoGlobe onNavigate={(p)=>setPage(p||"home")}/>;
+  }
+
+  return(
+    <div style={{width:"100vw",height:"100vh",overflow:"hidden",fontFamily:"'Cormorant Garamond',serif"}}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{border-color:rgba(200,149,108,0.5)!important;outline:none}`}</style>
+      <SectionNav active={activeSection} onNav={scrollToSection}/>
+      <GlobeTab onClick={()=>setPage("globe")}/>
+      <div ref={containerRef} style={{width:"100vw",height:"100vh",overflow:"hidden",scrollBehavior:"smooth"}}>
+        <HeroSection/>
+        <HowItWorksSection/>
+        <TravelGuidesSection/>
+        <AboutSection/>
+        <GetStartedSection/>
+      </div>
     </div>
   );
 }
