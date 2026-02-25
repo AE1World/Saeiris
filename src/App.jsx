@@ -166,39 +166,40 @@ function GuideModal({guide,onClose}){
 
 function TravelGuidesSection(){
   const[selected,setSelected]=useState(null);
-  // Frame positions as percentages matching the wall image
+  // Frame positions pixel-detected from green-screen calibration
   const frames=[
-    {pct:{left:23.3,top:11.5,width:15.0,height:36.5},...GUIDES[0]},
-    {pct:{left:40.4,top:11.5,width:15.0,height:36.5},...GUIDES[1]},
-    {pct:{left:57.5,top:11.5,width:15.0,height:36.5},...GUIDES[2]},
-    {pct:{left:23.3,top:52.0,width:15.0,height:35.0},...GUIDES[3]},
-    {pct:{left:40.4,top:52.0,width:15.0,height:35.0},...GUIDES[4]},
-    {pct:{left:57.5,top:52.0,width:15.0,height:35.0},...GUIDES[5]},
+    {pct:{left:30.84,top:11.76,width:10.85,height:26.10},...GUIDES[0]},
+    {pct:{left:45.33,top:11.76,width:12.16,height:26.10},...GUIDES[1]},
+    {pct:{left:61.54,top:11.76,width:11.20,height:26.23},...GUIDES[2]},
+    {pct:{left:30.84,top:43.38,width:10.85,height:28.19},...GUIDES[3]},
+    {pct:{left:45.33,top:43.38,width:12.23,height:28.19},...GUIDES[4]},
+    {pct:{left:61.54,top:43.38,width:11.20,height:28.06},...GUIDES[5]},
   ];
   return(
     <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Wall background image */}
+      {/* Wall background image — use the ORIGINAL (non-green) wall image */}
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/guides-wall.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F0EDEA"}}/>
-      {/* Title overlay */}
-      <div style={{position:"absolute",top:"2%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2}}>
-        <h2 style={{fontSize:"clamp(22px,3vw,36px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,textShadow:"0 1px 8px rgba(255,255,255,0.6)"}}>
-          Travel Guide <span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
+      {/* Title — right side, stacked vertically */}
+      <div style={{position:"absolute",right:"4%",top:"50%",transform:"translateY(-50%)",textAlign:"right",zIndex:2}}>
+        <div style={{fontSize:"clamp(10px,1vw,13px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:8}}>Explore</div>
+        <h2 style={{fontSize:"clamp(26px,3.2vw,42px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,lineHeight:1.15,textShadow:"0 1px 12px rgba(255,255,255,0.8)"}}>
+          Travel<br/>Guide<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
         </h2>
       </div>
-      {/* Interactive photos positioned over each frame */}
+      {/* Interactive photos positioned exactly over each frame */}
       {frames.map((f,i)=>(
-        <div key={i} onClick={()=>setSelected(f)} style={{position:"absolute",left:f.pct.left+"%",top:f.pct.top+"%",width:f.pct.width+"%",height:f.pct.height+"%",cursor:"pointer",zIndex:1,display:"flex",flexDirection:"column"}}>
-          {/* Photo inside frame */}
-          <div style={{flex:1,overflow:"hidden",position:"relative"}}>
+        <div key={i} style={{position:"absolute",left:f.pct.left+"%",top:f.pct.top+"%",width:f.pct.width+"%",height:f.pct.height+"%",zIndex:1}}>
+          {/* Photo fills the frame exactly */}
+          <div onClick={()=>setSelected(f)} style={{width:"100%",height:"100%",overflow:"hidden",cursor:"pointer",position:"relative"}}>
             <img src={f.img} alt={f.city} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.5s cubic-bezier(0.16,1,0.3,1)",filter:"brightness(0.97)"}}
               onMouseOver={e=>{e.currentTarget.style.transform="scale(1.06)";e.currentTarget.style.filter="brightness(1.02)";}}
               onMouseOut={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.filter="brightness(0.97)";}}/>
           </div>
-          {/* Plaque below frame */}
-          <div style={{textAlign:"center",marginTop:6}}>
-            <div style={{display:"inline-block",padding:"3px 14px",background:"rgba(42,36,32,0.75)",backdropFilter:"blur(4px)"}}>
-              <span style={{fontSize:"clamp(9px,0.9vw,13px)",fontWeight:500,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.12em",textTransform:"uppercase"}}>{f.city}</span>
-              <span style={{fontSize:"clamp(7px,0.65vw,10px)",color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",marginLeft:6,letterSpacing:"0.08em"}}>{f.country}</span>
+          {/* Plaque positioned just below the frame */}
+          <div style={{position:"absolute",bottom:-22,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap"}}>
+            <div style={{display:"inline-block",padding:"2px 12px",background:"rgba(42,36,32,0.8)",backdropFilter:"blur(4px)"}}>
+              <span style={{fontSize:"clamp(8px,0.8vw,11px)",fontWeight:500,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.12em",textTransform:"uppercase"}}>{f.city}</span>
+              <span style={{fontSize:"clamp(6px,0.55vw,9px)",color:"rgba(245,240,235,0.55)",fontFamily:"'Cormorant Garamond',serif",marginLeft:5,letterSpacing:"0.06em"}}>{f.country}</span>
             </div>
           </div>
         </div>
