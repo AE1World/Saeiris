@@ -85,12 +85,9 @@ function HowItWorksSection(){
   ];
   return(
     <section style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Background — image placeholder with warm overlay */}
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(160deg,#F8F4F0 0%,#EDE7E0 50%,#E4DDD5 100%)"}}>
-        <div style={{position:"absolute",inset:0,opacity:0.04,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
-        <div style={{position:"absolute",bottom:20,right:40,color:"rgba(120,100,80,0.25)",fontSize:11,fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.04em"}}>
-          ↑ Replace background with your minimalist product/plant image
-        </div>
+      {/* Background image */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}>
+        <div style={{position:"absolute",inset:0,background:"rgba(248,244,240,0.72)",backdropFilter:"blur(2px)"}}/>
       </div>
 
       <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:860,padding:"0 40px"}}>
