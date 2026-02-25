@@ -41,16 +41,10 @@ function GlobeTab({onClick,dark}){
 function HeroSection(){
   return(
     <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Full background image placeholder */}
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,#F5F0EB 0%,#E8E2DA 40%,#DDD5CC 100%)"}}>
-        {/* Subtle texture */}
-        <div style={{position:"absolute",inset:0,opacity:0.05,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
-        {/* Image instruction overlay */}
-        <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}>
-          <div style={{padding:"16px 28px",borderRadius:8,border:"1px dashed rgba(160,140,120,0.3)",color:"rgba(120,100,80,0.4)",fontSize:13,fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.04em",textAlign:"center",maxWidth:500,lineHeight:1.6}}>
-            Replace this section's background with your hero image<br/>(1920×1080 — Canon AE-1, Kodak film, Tuscany book on stone surface)
-          </div>
-        </div>
+      {/* Full background image */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-bg.png')",backgroundSize:"cover",backgroundPosition:"center bottom",backgroundColor:"#F5F0EB"}}>
+        {/* Subtle overlay to ensure text readability in upper area */}
+        <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,rgba(245,240,235,0.55) 0%,rgba(245,240,235,0.2) 35%,transparent 55%)"}}/>
       </div>
 
       {/* Logo — top left */}
