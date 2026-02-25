@@ -166,41 +166,43 @@ function GuideModal({guide,onClose}){
 
 function TravelGuidesSection(){
   const[selected,setSelected]=useState(null);
+  // Frame positions as percentages matching the wall image
+  const frames=[
+    {pct:{left:23.3,top:11.5,width:15.0,height:36.5},...GUIDES[0]},
+    {pct:{left:40.4,top:11.5,width:15.0,height:36.5},...GUIDES[1]},
+    {pct:{left:57.5,top:11.5,width:15.0,height:36.5},...GUIDES[2]},
+    {pct:{left:23.3,top:52.0,width:15.0,height:35.0},...GUIDES[3]},
+    {pct:{left:40.4,top:52.0,width:15.0,height:35.0},...GUIDES[4]},
+    {pct:{left:57.5,top:52.0,width:15.0,height:35.0},...GUIDES[5]},
+  ];
   return(
-    <section style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Wall-like background */}
-      <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,#EDE8E2 0%,#E4DDD5 50%,#DDD6CC 100%)"}}>
-        <div style={{position:"absolute",inset:0,opacity:0.06,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.55' numOctaves='5' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
-        <div style={{position:"absolute",bottom:20,right:40,color:"rgba(120,100,80,0.2)",fontSize:11,fontFamily:"'Cormorant Garamond',serif"}}>
-          ↑ Replace background with your minimalist wall image
-        </div>
-      </div>
-
-      <div style={{position:"relative",zIndex:1,textAlign:"center",width:"100%",maxWidth:900,padding:"0 80px"}}>
-        <h2 style={{fontSize:"clamp(26px,3.5vw,42px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 4px"}}>
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+      {/* Wall background image */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/guides-wall.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F0EDEA"}}/>
+      {/* Title overlay */}
+      <div style={{position:"absolute",top:"2%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2}}>
+        <h2 style={{fontSize:"clamp(22px,3vw,36px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,textShadow:"0 1px 8px rgba(255,255,255,0.6)"}}>
           Travel Guide <span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
         </h2>
-        <p style={{fontSize:13,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 32px",letterSpacing:"0.03em"}}>
-          Click any destination to explore a complete sample guide
-        </p>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:24,maxWidth:780,margin:"0 auto"}}>
-          {GUIDES.map((g,i)=>(
-            <div key={i} onClick={()=>setSelected(g)} style={{cursor:"pointer",position:"relative",overflow:"hidden",background:"#fff",boxShadow:"0 4px 20px rgba(40,30,20,0.1), 0 1px 3px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(200,180,160,0.15)",transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)",padding:6}}
-              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-4px) scale(1.01)";e.currentTarget.style.boxShadow="0 12px 40px rgba(40,30,20,0.15), 0 2px 6px rgba(0,0,0,0.08), inset 0 0 0 1px rgba(200,180,160,0.2)";}}
-              onMouseOut={e=>{e.currentTarget.style.transform="translateY(0) scale(1)";e.currentTarget.style.boxShadow="0 4px 20px rgba(40,30,20,0.1), 0 1px 3px rgba(0,0,0,0.06), inset 0 0 0 1px rgba(200,180,160,0.15)";}}>
-              <div style={{width:"100%",aspectRatio:"3/4",overflow:"hidden",background:"#E8E2DA"}}>
-                <img src={g.img} alt={g.city} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.4s"}}
-                  onMouseOver={e=>e.currentTarget.style.transform="scale(1.05)"}
-                  onMouseOut={e=>e.currentTarget.style.transform="scale(1)"}/>
-              </div>
-              <div style={{padding:"10px 8px 8px",textAlign:"center"}}>
-                <div style={{fontSize:14,fontWeight:500,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif"}}>{g.city}</div>
-                <div style={{fontSize:10,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.06em"}}>{g.country}</div>
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
+      {/* Interactive photos positioned over each frame */}
+      {frames.map((f,i)=>(
+        <div key={i} onClick={()=>setSelected(f)} style={{position:"absolute",left:f.pct.left+"%",top:f.pct.top+"%",width:f.pct.width+"%",height:f.pct.height+"%",cursor:"pointer",zIndex:1,display:"flex",flexDirection:"column"}}>
+          {/* Photo inside frame */}
+          <div style={{flex:1,overflow:"hidden",position:"relative"}}>
+            <img src={f.img} alt={f.city} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.5s cubic-bezier(0.16,1,0.3,1)",filter:"brightness(0.97)"}}
+              onMouseOver={e=>{e.currentTarget.style.transform="scale(1.06)";e.currentTarget.style.filter="brightness(1.02)";}}
+              onMouseOut={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.filter="brightness(0.97)";}}/>
+          </div>
+          {/* Plaque below frame */}
+          <div style={{textAlign:"center",marginTop:6}}>
+            <div style={{display:"inline-block",padding:"3px 14px",background:"rgba(42,36,32,0.75)",backdropFilter:"blur(4px)"}}>
+              <span style={{fontSize:"clamp(9px,0.9vw,13px)",fontWeight:500,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.12em",textTransform:"uppercase"}}>{f.city}</span>
+              <span style={{fontSize:"clamp(7px,0.65vw,10px)",color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",marginLeft:6,letterSpacing:"0.08em"}}>{f.country}</span>
+            </div>
+          </div>
+        </div>
+      ))}
       <GuideModal guide={selected} onClose={()=>setSelected(null)}/>
     </section>
   );
