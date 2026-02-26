@@ -177,8 +177,8 @@ function TravelGuidesSection(){
   return(
     <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
       <img src="/guides-wall.png" alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",pointerEvents:"none"}}/>
-      {/* Title — right of frames, between Kauai/Rome and monstera */}
-      <div style={{position:"absolute",left:"74%",top:"38%",textAlign:"right",zIndex:2}}>
+      {/* Title — right of frames, top-aligned with Kauai frame, left-aligned text */}
+      <div style={{position:"absolute",left:"74%",top:"5%",textAlign:"left",zIndex:2}}>
         <div style={{fontSize:"clamp(9px,0.85vw,12px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Explore</div>
         <h2 style={{fontSize:"clamp(20px,2.5vw,34px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,lineHeight:1.15,textShadow:"0 1px 12px rgba(255,255,255,0.8)"}}>
           Travel<br/>Guide<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
