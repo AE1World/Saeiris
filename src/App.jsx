@@ -166,42 +166,78 @@ function GuideModal({guide,onClose}){
 
 function TravelGuidesSection(){
   const[selected,setSelected]=useState(null);
-  // Frame positions pixel-detected from green-screen calibration
-  const frames=[
-    {pct:{left:30.84,top:11.76,width:10.85,height:26.10},...GUIDES[0]},
-    {pct:{left:45.33,top:11.76,width:12.16,height:26.10},...GUIDES[1]},
-    {pct:{left:61.54,top:11.76,width:11.20,height:26.23},...GUIDES[2]},
-    {pct:{left:30.84,top:43.38,width:10.85,height:28.19},...GUIDES[3]},
-    {pct:{left:45.33,top:43.38,width:12.23,height:28.19},...GUIDES[4]},
-    {pct:{left:61.54,top:43.38,width:11.20,height:28.06},...GUIDES[5]},
-  ];
+  const[debug,setDebug]=useState(true); // SET TO false WHEN DONE POSITIONING
+  const[positions,setPositions]=useState([
+    {left:31.4,top:8.0,width:10.5,height:27.5},
+    {left:45.8,top:8.0,width:11.8,height:27.5},
+    {left:62.2,top:8.0,width:10.8,height:27.5},
+    {left:31.4,top:40.5,width:10.5,height:29.0},
+    {left:45.8,top:40.5,width:11.8,height:29.0},
+    {left:62.2,top:40.5,width:10.8,height:29.0},
+  ]);
+  const dragRef=useRef(null);
+  const resizeRef=useRef(null);
+  const startRef=useRef(null);
+  const sectionRef=useRef(null);
+
+  const onMD=(e,idx,type)=>{
+    if(!debug)return;
+    e.preventDefault();e.stopPropagation();
+    if(type==="move")dragRef.current=idx;
+    else resizeRef.current=idx;
+    startRef.current={x:e.clientX,y:e.clientY,...positions[idx]};
+  };
+
+  useEffect(()=>{
+    if(!debug)return;
+    const onMove=(e)=>{
+      const rect=sectionRef.current?.getBoundingClientRect();
+      if(!rect||!startRef.current)return;
+      const wP=100/rect.width,hP=100/rect.height;
+      if(dragRef.current!==null){
+        const dx=(e.clientX-startRef.current.x)*wP,dy=(e.clientY-startRef.current.y)*hP;
+        setPositions(p=>{const n=[...p];n[dragRef.current]={...n[dragRef.current],left:startRef.current.left+dx,top:startRef.current.top+dy};return n;});
+      }
+      if(resizeRef.current!==null){
+        const dx=(e.clientX-startRef.current.x)*wP,dy=(e.clientY-startRef.current.y)*hP;
+        setPositions(p=>{const n=[...p];n[resizeRef.current]={...n[resizeRef.current],width:Math.max(3,startRef.current.width+dx),height:Math.max(3,startRef.current.height+dy)};return n;});
+      }
+    };
+    const onUp=()=>{dragRef.current=null;resizeRef.current=null;startRef.current=null;};
+    window.addEventListener("mousemove",onMove);
+    window.addEventListener("mouseup",onUp);
+    return()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);};
+  },[debug,positions]);
+
+  const copyPos=()=>{
+    const txt=positions.map((p,i)=>`${GUIDES[i].city}: left=${p.left.toFixed(2)}, top=${p.top.toFixed(2)}, width=${p.width.toFixed(2)}, height=${p.height.toFixed(2)}`).join("\n");
+    navigator.clipboard.writeText(txt);
+    alert("Copied! Paste these to me:\n\n"+txt);
+  };
+
   return(
-    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Wall background image — use the ORIGINAL (non-green) wall image */}
-      <div style={{position:"absolute",inset:0,backgroundImage:"url('/guides-wall.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F0EDEA"}}/>
-      {/* Title — right side, stacked vertically */}
-      <div style={{position:"absolute",right:"4%",top:"50%",transform:"translateY(-50%)",textAlign:"right",zIndex:2}}>
-        <div style={{fontSize:"clamp(10px,1vw,13px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:8}}>Explore</div>
-        <h2 style={{fontSize:"clamp(26px,3.2vw,42px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,lineHeight:1.15,textShadow:"0 1px 12px rgba(255,255,255,0.8)"}}>
+    <section ref={sectionRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <img src="/guides-wall.png" alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",pointerEvents:"none"}}/>
+      {/* Title */}
+      <div style={{position:"absolute",left:"6%",top:"6%",textAlign:"left",zIndex:2}}>
+        <div style={{fontSize:"clamp(9px,0.85vw,12px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Explore</div>
+        <h2 style={{fontSize:"clamp(20px,2.5vw,34px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,lineHeight:1.15,textShadow:"0 1px 12px rgba(255,255,255,0.8)"}}>
           Travel<br/>Guide<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
         </h2>
       </div>
-      {/* Interactive photos positioned exactly over each frame */}
-      {frames.map((f,i)=>(
-        <div key={i} style={{position:"absolute",left:f.pct.left+"%",top:f.pct.top+"%",width:f.pct.width+"%",height:f.pct.height+"%",zIndex:1}}>
-          {/* Photo fills the frame exactly */}
-          <div onClick={()=>setSelected(f)} style={{width:"100%",height:"100%",overflow:"hidden",cursor:"pointer",position:"relative"}}>
-            <img src={f.img} alt={f.city} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.5s cubic-bezier(0.16,1,0.3,1)",filter:"brightness(0.97)"}}
-              onMouseOver={e=>{e.currentTarget.style.transform="scale(1.06)";e.currentTarget.style.filter="brightness(1.02)";}}
-              onMouseOut={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.filter="brightness(0.97)";}}/>
+      {/* Debug toolbar */}
+      {debug&&<div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",gap:8}}>
+        <button onClick={copyPos} style={{padding:"8px 16px",background:"#2A2420",color:"#fff",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>📋 Copy Positions</button>
+        <button onClick={()=>setDebug(false)} style={{padding:"8px 16px",background:"#C8956C",color:"#fff",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>✓ Done</button>
+      </div>}
+      {/* Photos — drag to move, corner handle to resize */}
+      {positions.map((p,i)=>(
+        <div key={i} style={{position:"absolute",left:p.left+"%",top:p.top+"%",width:p.width+"%",height:p.height+"%",zIndex:1,border:debug?"2px solid rgba(200,100,50,0.6)":"none",boxSizing:"border-box"}}>
+          <div onMouseDown={e=>onMD(e,i,"move")} onClick={()=>{if(!debug)setSelected({...p,...GUIDES[i]});}} style={{width:"100%",height:"100%",overflow:"hidden",cursor:debug?"grab":"pointer"}}>
+            <img src={GUIDES[i].img} alt={GUIDES[i].city} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:debug?"none":"transform 0.5s",filter:"brightness(0.97)",pointerEvents:"none"}}/>
           </div>
-          {/* Plaque positioned just below the frame */}
-          <div style={{position:"absolute",bottom:-22,left:"50%",transform:"translateX(-50%)",whiteSpace:"nowrap"}}>
-            <div style={{display:"inline-block",padding:"2px 12px",background:"rgba(42,36,32,0.8)",backdropFilter:"blur(4px)"}}>
-              <span style={{fontSize:"clamp(8px,0.8vw,11px)",fontWeight:500,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.12em",textTransform:"uppercase"}}>{f.city}</span>
-              <span style={{fontSize:"clamp(6px,0.55vw,9px)",color:"rgba(245,240,235,0.55)",fontFamily:"'Cormorant Garamond',serif",marginLeft:5,letterSpacing:"0.06em"}}>{f.country}</span>
-            </div>
-          </div>
+          {debug&&<div onMouseDown={e=>onMD(e,i,"resize")} style={{position:"absolute",bottom:-4,right:-4,width:12,height:12,background:"#C8956C",borderRadius:2,cursor:"nwse-resize",zIndex:2}}/>}
+          {debug&&<div style={{position:"absolute",top:-18,left:0,fontSize:9,color:"#fff",fontFamily:"monospace",whiteSpace:"nowrap",background:"rgba(0,0,0,0.75)",padding:"1px 4px",borderRadius:2}}>{GUIDES[i].city} ({p.left.toFixed(1)},{p.top.toFixed(1)} {p.width.toFixed(1)}x{p.height.toFixed(1)})</div>}
         </div>
       ))}
       <GuideModal guide={selected} onClose={()=>setSelected(null)}/>
