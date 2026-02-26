@@ -207,11 +207,8 @@ function AboutSection(){
     <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#2A2420",position:"relative",overflow:"hidden",flexShrink:0}}>
       <div style={{position:"absolute",inset:0,opacity:0.06,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
       <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",gap:60,maxWidth:1100,padding:"0 80px",width:"100%"}}>
-        <div style={{flex:"0 0 400px",height:480,borderRadius:8,background:"linear-gradient(135deg,#3A3430,#4A4035)",border:"1px solid rgba(200,149,108,0.12)",display:"flex",alignItems:"center",justifyContent:"center",overflow:"hidden"}}>
-          <div style={{textAlign:"center",color:"rgba(200,149,108,0.35)",fontFamily:"'Cormorant Garamond',serif"}}>
-            <div style={{fontSize:44,marginBottom:10}}>📸</div>
-            <div style={{fontSize:13,letterSpacing:"0.05em"}}>Your photo here</div>
-          </div>
+        <div style={{flex:"0 0 400px",height:480,borderRadius:8,border:"1px solid rgba(200,149,108,0.12)",overflow:"hidden"}}>
+          <img src="/about-photo.jpg" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
         </div>
         <div style={{flex:1}}>
           <div style={{fontSize:10,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Our Story</div>
@@ -219,7 +216,7 @@ function AboutSection(){
             Built on a love of<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>travel & film</span>
           </h2>
           <p style={{fontSize:14,color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 16px"}}>
-            We're Josh and Sarah — a couple who fell in love with the world through the viewfinder of a 1976 Canon AE-1. What started as a hobby on our honeymoon in Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.
+            We're Josh and Bella — a couple who fell in love with the world through the lens of a 1976 Canon AE-1. What started as a hobby on our first trip to Europe in Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.
           </p>
           <p style={{fontSize:14,color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:0}}>
             AE-1 Viewpoint was born from the belief that the best trips aren't the most expensive — they're the most intentional. We plan every detail so you can be present, camera in hand, capturing moments the way they were meant to be captured.
