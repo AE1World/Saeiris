@@ -16,7 +16,7 @@ function SectionNav({active,onNav}){
       {SECTIONS.map((s,i)=>(
         <button key={s} onClick={()=>onNav(i)} style={{display:"flex",alignItems:"center",gap:10,background:"none",border:"none",cursor:"pointer",padding:0}}>
           <div style={{width:active===i?10:6,height:active===i?10:6,borderRadius:"50%",background:active===i?accent:inactiveDot,transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)",boxShadow:active===i?"0 0 12px rgba(200,149,108,0.4)":"none"}}/>
-          <span style={{fontSize:10,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:active===i?accent:inactiveColor,transition:"all 0.4s",fontFamily:"'Cormorant Garamond',serif",whiteSpace:"nowrap"}}>{s}</span>
+          <span style={{fontSize:12,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:active===i?accent:inactiveColor,transition:"all 0.4s",fontFamily:"'Cormorant Garamond',serif",whiteSpace:"nowrap"}}>{s}</span>
         </button>
       ))}
     </div>
@@ -78,37 +78,88 @@ function HeroSection(){
 // SECTION 2: HOW IT WORKS — clean minimal cards over image bg
 // ══════════════════════════════════════════════════════════════
 function HowItWorksSection(){
-  const cards=[
-    {icon:"✈",title:"Full-Service Planning",desc:"Flights, hotels, excursions — we handle everything and negotiate the best rates."},
-    {icon:"📷",title:"Canon AE-1 Experience",desc:"A vintage film camera shipped to your door. 36 shots to capture your journey the analog way."},
-    {icon:"🌍",title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — real travel moments from real cameras."}
-  ];
-  return(
-    <section style={{width:"100vw",height:"100vh",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Background image */}
-      <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}>
-        <div style={{position:"absolute",inset:0,background:"rgba(248,244,240,0.72)",backdropFilter:"blur(2px)"}}/>
-      </div>
+  const[debug,setDebug]=useState(true); // SET TO false WHEN DONE
+  const[hotspots,setHotspots]=useState([
+    {left:5,top:15,width:25,height:55,rotation:0,label:"Map → Join the Globe"},
+    {left:38,top:10,width:25,height:45,rotation:0,label:"Boarding Pass → Full-Service Planning"},
+    {left:65,top:25,width:25,height:55,rotation:0,label:"Passport → Canon AE-1 Experience"},
+  ]);
+  const dragRef=useRef(null);
+  const resizeRef=useRef(null);
+  const rotateRef=useRef(null);
+  const startRef=useRef(null);
+  const sectionRef=useRef(null);
 
-      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:860,padding:"0 40px"}}>
-        <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 6px"}}>
+  const onMD=(e,idx,type)=>{
+    if(!debug)return;
+    e.preventDefault();e.stopPropagation();
+    if(type==="move")dragRef.current=idx;
+    else if(type==="resize")resizeRef.current=idx;
+    else if(type==="rotate")rotateRef.current=idx;
+    startRef.current={x:e.clientX,y:e.clientY,...hotspots[idx]};
+  };
+
+  useEffect(()=>{
+    if(!debug)return;
+    const onMove=(e)=>{
+      const rect=sectionRef.current?.getBoundingClientRect();
+      if(!rect||!startRef.current)return;
+      const wP=100/rect.width,hP=100/rect.height;
+      if(dragRef.current!==null){
+        const dx=(e.clientX-startRef.current.x)*wP,dy=(e.clientY-startRef.current.y)*hP;
+        setHotspots(p=>{const n=[...p];n[dragRef.current]={...n[dragRef.current],left:startRef.current.left+dx,top:startRef.current.top+dy};return n;});
+      }
+      if(resizeRef.current!==null){
+        const dx=(e.clientX-startRef.current.x)*wP,dy=(e.clientY-startRef.current.y)*hP;
+        setHotspots(p=>{const n=[...p];n[resizeRef.current]={...n[resizeRef.current],width:Math.max(3,startRef.current.width+dx),height:Math.max(3,startRef.current.height+dy)};return n;});
+      }
+      if(rotateRef.current!==null){
+        const dx=e.clientX-startRef.current.x;
+        setHotspots(p=>{const n=[...p];n[rotateRef.current]={...n[rotateRef.current],rotation:startRef.current.rotation+dx*0.5};return n;});
+      }
+    };
+    const onUp=()=>{dragRef.current=null;resizeRef.current=null;rotateRef.current=null;startRef.current=null;};
+    window.addEventListener("mousemove",onMove);
+    window.addEventListener("mouseup",onUp);
+    return()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);};
+  },[debug,hotspots]);
+
+  const copyPos=()=>{
+    const txt=hotspots.map((h,i)=>`${h.label}: left=${h.left.toFixed(2)}, top=${h.top.toFixed(2)}, width=${h.width.toFixed(2)}, height=${h.height.toFixed(2)}, rotation=${h.rotation.toFixed(1)}`).join("\n");
+    navigator.clipboard.writeText(txt);
+    alert("Copied! Paste these to me:\n\n"+txt);
+  };
+
+  return(
+    <section ref={sectionRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+      {/* Background image — full opacity, no overlay */}
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}/>
+
+      {/* Title */}
+      <div style={{position:"absolute",top:"8%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2}}>
+        <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 16px rgba(248,244,240,0.9)"}}>
           Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
         </h2>
-        <p style={{fontSize:14,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.7,maxWidth:580,margin:"16px auto 44px",letterSpacing:"0.02em"}}>
-          What sets us apart is what arrives at your door before you leave: a vintage Canon AE-1 loaded with 36 exposures. No filters. No edits. Just you and the world.
-        </p>
-        <div style={{display:"flex",gap:20,justifyContent:"center"}}>
-          {cards.map((c,i)=>(
-            <div key={i} style={{flex:"1 1 240px",maxWidth:270,padding:"32px 24px 28px",background:"rgba(253,251,248,0.85)",backdropFilter:"blur(12px)",border:"1px solid rgba(200,180,160,0.15)",textAlign:"left",transition:"all 0.4s cubic-bezier(0.16,1,0.3,1)"}}
-              onMouseOver={e=>{e.currentTarget.style.transform="translateY(-4px)";e.currentTarget.style.boxShadow="0 12px 40px rgba(40,30,20,0.08)";}}
-              onMouseOut={e=>{e.currentTarget.style.transform="translateY(0)";e.currentTarget.style.boxShadow="none";}}>
-              <div style={{fontSize:20,marginBottom:16,opacity:0.8}}>{c.icon}</div>
-              <h3 style={{fontSize:15,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 8px",letterSpacing:"0.02em"}}>{c.title}</h3>
-              <p style={{fontSize:12.5,color:"#8A7A68",lineHeight:1.6,margin:0,fontFamily:"'Cormorant Garamond',serif"}}>{c.desc}</p>
-            </div>
-          ))}
-        </div>
       </div>
+
+      {/* Debug toolbar */}
+      {debug&&<div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",gap:8}}>
+        <button onClick={copyPos} style={{padding:"8px 16px",background:"#2A2420",color:"#fff",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>📋 Copy Positions</button>
+        <button onClick={()=>setDebug(false)} style={{padding:"8px 16px",background:"#C8956C",color:"#fff",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>✓ Done</button>
+      </div>}
+
+      {/* 3 draggable/resizable/rotatable hotspots */}
+      {hotspots.map((h,i)=>(
+        <div key={i} style={{position:"absolute",left:h.left+"%",top:h.top+"%",width:h.width+"%",height:h.height+"%",transform:`rotate(${h.rotation}deg)`,zIndex:1,border:debug?"2px solid rgba(220,120,50,0.7)":"none",background:debug?"rgba(220,120,50,0.15)":"transparent",boxSizing:"border-box",borderRadius:4}}>
+          <div onMouseDown={e=>onMD(e,i,"move")} style={{width:"100%",height:"100%",cursor:debug?"grab":"pointer"}}/>
+          {/* Resize handle — bottom right (orange) */}
+          {debug&&<div onMouseDown={e=>onMD(e,i,"resize")} style={{position:"absolute",bottom:-5,right:-5,width:12,height:12,background:"#C8956C",borderRadius:2,cursor:"nwse-resize",zIndex:2}}/>}
+          {/* Rotate handle — top right (blue) */}
+          {debug&&<div onMouseDown={e=>onMD(e,i,"rotate")} style={{position:"absolute",top:-5,right:-5,width:12,height:12,background:"#4A90D9",borderRadius:"50%",cursor:"crosshair",zIndex:2}}/>}
+          {/* Label */}
+          {debug&&<div style={{position:"absolute",top:-20,left:0,fontSize:9,color:"#fff",fontFamily:"monospace",whiteSpace:"nowrap",background:"rgba(0,0,0,0.8)",padding:"2px 6px",borderRadius:2}}>{h.label} r:{h.rotation.toFixed(0)}° ({h.left.toFixed(1)},{h.top.toFixed(1)} {h.width.toFixed(1)}x{h.height.toFixed(1)})</div>}
+        </div>
+      ))}
     </section>
   );
 }
