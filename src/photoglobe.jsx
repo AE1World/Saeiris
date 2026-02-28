@@ -93,15 +93,20 @@ function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,on
   const R=useMemo(()=>Math.min(dims.w,dims.h)*0.42*globeScale,[dims,globeScale]);const cx=dims.w/2,cy=dims.h/2;
 
   // D3 projection - handles clipping correctly
-  const projection=useMemo(()=>d3.geoOrthographic().translate([cx,cy]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(0.5),[cx,cy,R,rotation]);
+  const projection=useMemo(()=>d3.geoOrthographic().translate([cx,cy]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(1),[cx,cy,R,rotation]);
   const pathGen=useMemo(()=>d3.geoPath(projection),[projection]);
 
   // Keep orthoProject for pins and graticules
   const proj=useCallback((lat,lon)=>orthoProject(lat,lon,rotation.lat,rotation.lon,R,cx,cy),[R,cx,cy,rotation]);
 
+  // Pre-generate graticule once
+  const graticuleData=useMemo(()=>d3.geoGraticule().step([30,20])(),[]);
+
   const draw=useCallback(()=>{
     const cv=canvasRef.current;if(!cv)return;const ctx=cv.getContext("2d");const dpr=window.devicePixelRatio||1;
-    cv.width=dims.w*dpr;cv.height=dims.h*dpr;ctx.scale(dpr,dpr);
+    const cw=dims.w*dpr,ch=dims.h*dpr;
+    if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch;}
+    ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.fillStyle="#111A24";ctx.fillRect(0,0,dims.w,dims.h);
     const gSh=ctx.createRadialGradient(cx+6,cy+14,R*0.85,cx+6,cy+14,R*1.2);gSh.addColorStop(0,"rgba(0,0,0,0.25)");gSh.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=gSh;ctx.fillRect(0,0,dims.w,dims.h);
     ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);const oG=ctx.createRadialGradient(cx-R*0.2,cy-R*0.25,R*0.05,cx,cy,R);
@@ -109,13 +114,12 @@ function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,on
     ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
     // Graticules
     ctx.strokeStyle="rgba(255,255,255,0.05)";ctx.lineWidth=0.5;
-    const grat=d3.geoGraticule().step([30,20])();
-    ctx.beginPath();pathGen.context(ctx)(grat);ctx.stroke();
+    ctx.beginPath();pathGen.context(ctx)(graticuleData);ctx.stroke();
     // Shadow layer
-    const shadowProj=d3.geoOrthographic().translate([cx+3,cy+4]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(0.5);
+    const shadowProj=d3.geoOrthographic().translate([cx+3,cy+4]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(1);
     const shadowPath=d3.geoPath(shadowProj).context(ctx);
     for(let fi=0;fi<feats.length;fi++){ctx.beginPath();shadowPath(feats[fi].geometry);ctx.fillStyle="rgba(0,20,40,0.3)";ctx.fill();}
-    // Countries
+    // Countries — single batch for fill, single batch for stroke
     for(let fi=0;fi<feats.length;fi++){
       const colors=featColors[fi];
       ctx.beginPath();pathGen.context(ctx)(feats[fi].geometry);
@@ -136,7 +140,7 @@ function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,on
       ctx.beginPath();ctx.arc(p.x,p.y,r*0.28,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fill();
       if(sel||hov){const lbl=photo.city;ctx.font='600 12px "DM Sans",system-ui,sans-serif';const tw=ctx.measureText(lbl).width;const by=p.y-r-30;ctx.fillStyle="rgba(10,20,30,0.92)";ctx.beginPath();ctx.roundRect(p.x-tw/2-10,by,tw+20,26,8);ctx.fill();ctx.beginPath();ctx.moveTo(p.x-5,by+26);ctx.lineTo(p.x+5,by+26);ctx.lineTo(p.x,by+32);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(lbl,p.x,by+13);}}
     if(loading){ctx.fillStyle="#8AD";ctx.font='500 14px "DM Sans",sans-serif';ctx.textAlign="center";ctx.fillText("Loading globe...",cx,cy);}
-  },[dims,feats,featColors,photos,selectedId,rotation,R,cx,cy,proj,pathGen,projection,loading,globeScale]);
+  },[dims,feats,featColors,photos,selectedId,rotation,R,cx,cy,proj,pathGen,projection,loading,globeScale,graticuleData]);
 
   useEffect(()=>{const f=requestAnimationFrame(draw);return()=>cancelAnimationFrame(f);},[draw]);
   const hitTest=useCallback((mx,my)=>{const pinR=Math.max(8,Math.min(18,10*globeScale));for(let i=photos.length-1;i>=0;i--){const p=proj(photos[i].lat,photos[i].lon);if(p&&Math.hypot(mx-p.x,my-p.y)<pinR+10)return photos[i].id;}return null;},[photos,proj,globeScale]);
