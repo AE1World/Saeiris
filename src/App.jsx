@@ -235,41 +235,41 @@ function GetStartedSection(){
   const[form,setForm]=useState({name:"",email:"",destination:"",travelers:"",dates:"",message:""});
   const[submitted,setSubmitted]=useState(false);
   const up=(k,v)=>setForm(p=>({...p,[k]:v}));
-  const iS={width:"100%",padding:"12px 14px",border:"none",borderBottom:"1px solid rgba(200,149,108,0.2)",background:"transparent",color:"#2A2420",fontSize:14,fontFamily:"'Cormorant Garamond',serif",outline:"none",transition:"border-color 0.3s"};
+  const iS={width:"100%",padding:"14px 16px",border:"none",borderBottom:"1px solid rgba(200,149,108,0.2)",background:"transparent",color:"#2A2420",fontSize:16,fontFamily:"'Cormorant Garamond',serif",outline:"none",transition:"border-color 0.3s"};
   return(
     <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}>
-      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:520,width:"100%",padding:"0 40px"}}>
-        <div style={{fontSize:10,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:12}}>Start Your Journey</div>
-        <h2 style={{fontSize:"clamp(26px,3.5vw,40px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 6px"}}>
+      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:560,width:"100%",padding:"0 40px"}}>
+        <div style={{fontSize:12,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:12}}>Start Your Journey</div>
+        <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 6px"}}>
           Let's Plan <span style={{fontStyle:"italic",color:"#C8956C"}}>Something Beautiful</span>
         </h2>
-        <p style={{fontSize:13,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 32px",lineHeight:1.6}}>
+        <p style={{fontSize:15,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 32px",lineHeight:1.6}}>
           Tell us where you'd love to go. We'll handle the rest.
         </p>
         {submitted?(
           <div style={{padding:"36px",borderRadius:12,background:"rgba(200,149,108,0.05)",border:"1px solid rgba(200,149,108,0.12)"}}>
-            <div style={{fontSize:32,marginBottom:10}}>✈️</div>
-            <div style={{fontSize:18,fontWeight:400,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>We'll be in touch!</div>
-            <div style={{fontSize:12,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif"}}>Check your email for next steps.</div>
+            <div style={{fontSize:34,marginBottom:10}}>✈️</div>
+            <div style={{fontSize:20,fontWeight:400,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>We'll be in touch!</div>
+            <div style={{fontSize:14,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif"}}>Check your email for next steps.</div>
           </div>
         ):(
-          <div style={{display:"flex",flexDirection:"column",gap:18,textAlign:"left"}}>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+          <div style={{display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
               <input value={form.name} onChange={e=>up("name",e.target.value)} placeholder="Your name" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
               <input value={form.email} onChange={e=>up("email",e.target.value)} placeholder="Email" type="email" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
             </div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:18}}>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
               <input value={form.destination} onChange={e=>up("destination",e.target.value)} placeholder="Dream destination" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
               <input value={form.travelers} onChange={e=>up("travelers",e.target.value)} placeholder="Number of travelers" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
             </div>
             <input value={form.dates} onChange={e=>up("dates",e.target.value)} placeholder="Preferred travel dates (flexible is fine!)" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
-            <textarea value={form.message} onChange={e=>up("message",e.target.value)} placeholder="Anything else you'd like us to know?" rows={3} style={{...iS,resize:"none",borderBottom:"none",border:"1px solid rgba(200,149,108,0.15)",borderRadius:8,padding:"12px 14px"}} onFocus={e=>e.target.style.borderColor="#C8956C"} onBlur={e=>e.target.style.borderColor="rgba(200,149,108,0.15)"}/>
-            <button onClick={()=>setSubmitted(true)} style={{width:"100%",padding:"14px",borderRadius:0,background:"#2A2420",color:"#F5F0EB",border:"none",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.12em",textTransform:"uppercase",transition:"all 0.3s"}}
+            <textarea value={form.message} onChange={e=>up("message",e.target.value)} placeholder="Anything else you'd like us to know?" rows={3} style={{...iS,resize:"none",borderBottom:"none",border:"1px solid rgba(200,149,108,0.15)",borderRadius:8,padding:"14px 16px",marginBottom:4}} onFocus={e=>e.target.style.borderColor="#C8956C"} onBlur={e=>e.target.style.borderColor="rgba(200,149,108,0.15)"}/>
+            <button onClick={()=>setSubmitted(true)} style={{width:"100%",padding:"16px",borderRadius:0,background:"#2A2420",color:"#F5F0EB",border:"none",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.12em",textTransform:"uppercase",transition:"all 0.3s"}}
               onMouseOver={e=>e.currentTarget.style.background="#C8956C"}
               onMouseOut={e=>e.currentTarget.style.background="#2A2420"}>
               Send Inquiry
             </button>
-            <p style={{fontSize:10,color:"#A89A88",textAlign:"center",fontFamily:"'Cormorant Garamond',serif",margin:0}}>No commitment — just a conversation about your perfect trip.</p>
+            <p style={{fontSize:12,color:"#A89A88",textAlign:"center",fontFamily:"'Cormorant Garamond',serif",margin:0}}>No commitment — just a conversation about your perfect trip.</p>
           </div>
         )}
       </div>
