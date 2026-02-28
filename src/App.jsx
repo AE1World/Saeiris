@@ -122,7 +122,7 @@ function HowItWorksSection(){
     window.addEventListener("mousemove",onMove);
     window.addEventListener("mouseup",onUp);
     return()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);};
-  },[debug,hotspots]);
+  },[debug]);
 
   const copyPos=()=>{
     const txt=hotspots.map((h,i)=>`${h.label}: left=${h.left.toFixed(2)}, top=${h.top.toFixed(2)}, width=${h.width.toFixed(2)}, height=${h.height.toFixed(2)}, rotation=${h.rotation.toFixed(1)}`).join("\n");
