@@ -58,7 +58,7 @@ function HeroSection(){
       </div>
 
       {/* Tagline — centered upper area */}
-      <div style={{position:"absolute",top:"28%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2}}>
+      <div style={{position:"absolute",top:"17.51%",left:"37.66%",textAlign:"center",zIndex:2}}>
         <h1 style={{fontSize:"clamp(38px,5.5vw,72px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.08,margin:0,letterSpacing:"-0.02em"}}>
           Your Journey.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>On Film.</span>
         </h1>
@@ -66,7 +66,7 @@ function HeroSection(){
       </div>
 
       {/* Scroll indicator */}
-      <div style={{position:"absolute",bottom:36,left:"50%",transform:"translateX(-50%)",display:"flex",flexDirection:"column",alignItems:"center",gap:8,opacity:0.4,zIndex:2}}>
+      <div style={{position:"absolute",bottom:36,left:"48.43%",display:"flex",flexDirection:"column",alignItems:"center",gap:8,opacity:0.4,zIndex:2}}>
         <span style={{fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif"}}>Scroll</span>
         <div style={{width:1,height:24,background:"linear-gradient(to bottom,#8A7A68,transparent)"}}/>
       </div>
@@ -136,14 +136,14 @@ function HowItWorksSection(){
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}/>
 
       {/* Title */}
-      <div style={{position:"absolute",top:"8%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
+      <div style={{position:"absolute",top:"46.92%",left:"33.94%",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
         <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 20px rgba(248,244,240,1), 0 0 40px rgba(248,244,240,0.8)"}}>
           Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
         </h2>
       </div>
 
       {/* Subtitle hint */}
-      <div style={{position:"absolute",bottom:"6%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
+      <div style={{position:"absolute",top:"2.34%",left:"41.68%",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
         <p style={{fontSize:13,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.06em",textShadow:"0 1px 8px rgba(248,244,240,0.9)"}}>Click the objects to learn more</p>
       </div>
 
@@ -230,7 +230,7 @@ function TravelGuidesSection(){
     <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
       <img src="/guides-wall.png" alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",pointerEvents:"none"}}/>
       {/* Title — right of frames, top-aligned with Kauai frame, left-aligned text */}
-      <div style={{position:"absolute",left:"74%",top:"5%",textAlign:"left",zIndex:2}}>
+      <div style={{position:"absolute",left:"77.77%",top:"3.45%",textAlign:"left",zIndex:2}}>
         <div style={{fontSize:"clamp(9px,0.85vw,12px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Explore</div>
         <h2 style={{fontSize:"clamp(20px,2.5vw,34px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,lineHeight:1.15,textShadow:"0 1px 12px rgba(255,255,255,0.8)"}}>
           Travel<br/>Guide<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
@@ -258,11 +258,10 @@ function AboutSection(){
   return(
     <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#2A2420",position:"relative",overflow:"hidden",flexShrink:0}}>
       <div style={{position:"absolute",inset:0,opacity:0.06,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
-      <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",gap:60,maxWidth:1100,padding:"0 80px",width:"100%"}}>
-        <div style={{flex:"0 0 400px",height:480,borderRadius:8,border:"1px solid rgba(200,149,108,0.12)",overflow:"hidden"}}>
-          <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
-        </div>
-        <div style={{flex:1}}>
+      <div style={{position:"absolute",left:"10%",top:"23.58%",width:400,height:480,borderRadius:8,border:"1px solid rgba(200,149,108,0.12)",overflow:"hidden",zIndex:1}}>
+        <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
+      </div>
+      <div style={{position:"absolute",left:"45%",top:"29.05%",maxWidth:500,zIndex:1}}>
           <div style={{fontSize:12,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Our Story</div>
           <h2 style={{fontSize:"clamp(30px,3.2vw,42px)",fontWeight:300,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.2,margin:"0 0 22px"}}>
             Built on a love of<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>travel & film</span>
@@ -275,7 +274,6 @@ function AboutSection(){
           </p>
           <div style={{width:40,height:1,background:"#C8956C",marginTop:24}}/>
         </div>
-      </div>
     </section>
   );
 }
@@ -289,8 +287,8 @@ function GetStartedSection(){
   const up=(k,v)=>setForm(p=>({...p,[k]:v}));
   const iS={width:"100%",padding:"14px 16px",border:"none",borderBottom:"1px solid rgba(200,149,108,0.2)",background:"transparent",color:"#2A2420",fontSize:16,fontFamily:"'Cormorant Garamond',serif",outline:"none",transition:"border-color 0.3s"};
   return(
-    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}>
-      <div style={{position:"relative",zIndex:1,textAlign:"center",maxWidth:560,width:"100%",padding:"0 40px"}}>
+    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"flex-start",justifyContent:"flex-start",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <div style={{position:"absolute",left:"35.36%",top:"22.48%",textAlign:"center",maxWidth:560,width:"100%",padding:"0 40px",zIndex:1}}>
         <div style={{fontSize:12,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:12}}>Start Your Journey</div>
         <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 6px"}}>
           Let's Plan <span style={{fontStyle:"italic",color:"#C8956C"}}>Something Beautiful</span>

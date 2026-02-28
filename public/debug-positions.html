@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AE-1 Viewpoint — Debug Text Positions</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Cormorant Garamond', serif; background: #1a1a1a; overflow-x: hidden; }
+
+  .section-container {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    overflow: hidden;
+    border-bottom: 3px solid #C8956C;
+  }
+
+  .section-label {
+    position: fixed;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(200,149,108,0.95);
+    color: #fff;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    z-index: 9999;
+    pointer-events: none;
+    text-transform: uppercase;
+  }
+
+  .draggable {
+    position: absolute;
+    border: 2px dashed #FF6B00;
+    background: rgba(255, 107, 0, 0.08);
+    cursor: move;
+    z-index: 50;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .draggable:hover {
+    background: rgba(255, 107, 0, 0.15);
+  }
+  .draggable.active {
+    border-color: #ff0;
+    background: rgba(255, 255, 0, 0.1);
+  }
+
+  .drag-label {
+    position: absolute;
+    top: -22px;
+    left: 0;
+    font-size: 11px;
+    font-weight: 700;
+    color: #FF6B00;
+    background: rgba(0,0,0,0.75);
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    font-family: monospace;
+  }
+
+  .drag-coords {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    font-size: 10px;
+    color: #FF6B00;
+    background: rgba(0,0,0,0.75);
+    padding: 2px 6px;
+    border-radius: 3px;
+    white-space: nowrap;
+    pointer-events: none;
+    font-family: monospace;
+  }
+
+  #toolbar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.9);
+    backdrop-filter: blur(12px);
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    z-index: 10000;
+    border-top: 2px solid #C8956C;
+  }
+
+  #toolbar button {
+    padding: 8px 20px;
+    background: #C8956C;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: monospace;
+    transition: background 0.2s;
+  }
+  #toolbar button:hover { background: #b07a52; }
+
+  #toolbar .info {
+    color: #aaa;
+    font-size: 12px;
+    font-family: monospace;
+  }
+
+  #toast {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #2d8a4e;
+    color: #fff;
+    padding: 10px 28px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: monospace;
+    z-index: 99999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  #toast.show { opacity: 1; }
+
+  /* Section backgrounds */
+  .section-hero {
+    background: url('/hero-bg.png') center bottom / cover no-repeat;
+    background-color: #F5F0EB;
+  }
+  .section-howitworks {
+    background: url('/howitworks-bg.png') center / cover no-repeat;
+    background-color: #F8F4F0;
+  }
+  .section-guides {
+    background: url('/guides-wall.png') center / cover no-repeat;
+    background-color: #F5F0EB;
+  }
+  .section-about {
+    background: #2A2420;
+  }
+  .section-getstarted {
+    background: #FDFBF8;
+  }
+
+  .nav-hint {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 9998;
+  }
+  .nav-hint a {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(200,149,108,0.4);
+    border: 1px solid #C8956C;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-hint a:hover, .nav-hint a.active {
+    background: #C8956C;
+    transform: scale(1.3);
+  }
+</style>
+</head>
+<body>
+
+<div id="toast">Positions copied to clipboard!</div>
+
+<div class="nav-hint" id="navHint"></div>
+
+<div id="toolbar">
+  <button onclick="copyAllPositions()">Copy All Positions</button>
+  <button onclick="resetAll()">Reset All</button>
+  <span class="info">Drag any orange box to reposition. Scroll to navigate sections.</span>
+  <span class="info" id="currentSection" style="margin-left:auto; color:#C8956C;"></span>
+</div>
+
+<!-- SECTION 1: HERO -->
+<div class="section-container section-hero" id="sec-hero">
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(245,240,235,0.55) 0%,rgba(245,240,235,0.2) 35%,transparent 55%)"></div>
+
+  <div class="draggable" id="hero-logo" data-section="hero" data-name="Logo"
+       style="left:80px; top:32px; width:220px; height:60px;">
+    <div class="drag-label">Logo</div>
+    <div class="drag-coords"></div>
+    <div style="padding:4px;">
+      <div style="font-size:28px;font-weight:300;color:#2A2420;">AE-1 <i style="font-weight:400">Viewpoint</i></div>
+      <div style="font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:#8A7A68;margin-top:2px;">Curated travel · Captured on film</div>
+    </div>
+  </div>
+
+  <div class="draggable" id="hero-tagline" data-section="hero" data-name="Tagline"
+       style="left:50%; top:28%; transform:translateX(-50%); width:500px; height:130px;">
+    <div class="drag-label">Tagline</div>
+    <div class="drag-coords"></div>
+    <div style="text-align:center;padding:8px;">
+      <h1 style="font-size:64px;font-weight:300;color:#2A2420;line-height:1.08;margin:0;">
+        Your Journey.<br><span style="font-style:italic;font-weight:400;color:#C8956C;">On Film.</span>
+      </h1>
+      <div style="width:40px;height:1px;background:#C8956C;margin:18px auto 0;"></div>
+    </div>
+  </div>
+
+  <div class="draggable" id="hero-scroll" data-section="hero" data-name="Scroll Indicator"
+       style="left:50%; bottom:36px; transform:translateX(-50%); width:60px; height:50px;">
+    <div class="drag-label">Scroll</div>
+    <div class="drag-coords"></div>
+    <div style="text-align:center;opacity:0.4;">
+      <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#8A7A68;">Scroll</span>
+      <div style="width:1px;height:24px;background:linear-gradient(to bottom,#8A7A68,transparent);margin:6px auto 0;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 2: HOW IT WORKS -->
+<div class="section-container section-howitworks" id="sec-howitworks">
+  <div class="draggable" id="hiw-title" data-section="howitworks" data-name="Title"
+       style="left:50%; top:8%; transform:translateX(-50%); width:600px; height:100px;">
+    <div class="drag-label">Title</div>
+    <div class="drag-coords"></div>
+    <div style="text-align:center;padding:8px;">
+      <h2 style="font-size:48px;font-weight:300;color:#2A2420;line-height:1.15;margin:0;text-shadow:0 2px 20px rgba(248,244,240,1),0 0 40px rgba(248,244,240,0.8);">
+        Not Just a Trip.<br><span style="font-style:italic;font-weight:400;color:#C8956C;">A Memory</span> You Can Hold.
+      </h2>
+    </div>
+  </div>
+
+  <div class="draggable" id="hiw-hint" data-section="howitworks" data-name="Hint Text"
+       style="left:50%; bottom:6%; transform:translateX(-50%); width:280px; height:30px;">
+    <div class="drag-label">Hint</div>
+    <div class="drag-coords"></div>
+    <div style="text-align:center;">
+      <p style="font-size:13px;color:#8A7A68;letter-spacing:0.06em;">Click the objects to learn more</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 3: TRAVEL GUIDES -->
+<div class="section-container section-guides" id="sec-guides">
+  <div class="draggable" id="guides-title" data-section="guides" data-name="Title Block"
+       style="left:74%; top:5%; width:220px; height:140px;">
+    <div class="drag-label">Title Block</div>
+    <div class="drag-coords"></div>
+    <div style="padding:4px;">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:#C8956C;margin-bottom:6px;">Explore</div>
+      <h2 style="font-size:30px;font-weight:300;color:#2A2420;line-height:1.15;margin:0;">
+        Travel<br>Guide<br><span style="font-style:italic;color:#C8956C;">Showcase</span>
+      </h2>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 4: ABOUT -->
+<div class="section-container section-about" id="sec-about">
+  <div class="draggable" id="about-photo" data-section="about" data-name="Photo"
+       style="left:10%; top:50%; transform:translateY(-50%); width:400px; height:480px;">
+    <div class="drag-label">Photo</div>
+    <div class="drag-coords"></div>
+    <div style="width:100%;height:100%;border-radius:8px;border:1px solid rgba(200,149,108,0.12);overflow:hidden;background:#3a3430;">
+      <img src="/aboutphoto.png" alt="Josh and Bella" style="width:100%;height:100%;object-fit:cover;object-position:center 30%;">
+    </div>
+  </div>
+
+  <div class="draggable" id="about-text" data-section="about" data-name="Text Block"
+       style="left:45%; top:50%; transform:translateY(-50%); width:500px; height:380px;">
+    <div class="drag-label">Text Block</div>
+    <div class="drag-coords"></div>
+    <div style="padding:8px;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#C8956C;margin-bottom:14px;">Our Story</div>
+      <h2 style="font-size:38px;font-weight:300;color:#F5F0EB;line-height:1.2;margin:0 0 22px;">
+        Built on a love of<br><span style="font-style:italic;color:#C8956C;">travel & film</span>
+      </h2>
+      <p style="font-size:16px;color:rgba(245,240,235,0.6);line-height:1.8;margin:0 0 16px;">
+        We're Josh and Bella — a couple who fell in love with the world through the lens of a 1976 Canon AE-1...
+      </p>
+      <div style="width:40px;height:1px;background:#C8956C;margin-top:24px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION 5: GET STARTED -->
+<div class="section-container section-getstarted" id="sec-getstarted">
+  <div class="draggable" id="gs-form" data-section="getstarted" data-name="Form Block"
+       style="left:50%; top:50%; transform:translate(-50%,-50%); width:560px; height:500px;">
+    <div class="drag-label">Form Block</div>
+    <div class="drag-coords"></div>
+    <div style="text-align:center;padding:8px;">
+      <div style="font-size:12px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#C8956C;margin-bottom:12px;">Start Your Journey</div>
+      <h2 style="font-size:38px;font-weight:300;color:#2A2420;line-height:1.15;margin:0 0 6px;">
+        Let's Plan <span style="font-style:italic;color:#C8956C;">Something Beautiful</span>
+      </h2>
+      <p style="font-size:15px;color:#8A7A68;margin:0 0 32px;line-height:1.6;">
+        Tell us where you'd love to go. We'll handle the rest.
+      </p>
+      <div style="display:flex;flex-direction:column;gap:14px;text-align:left;">
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(200,149,108,0.2);color:#A89A88;font-size:16px;">Your name / Email</div>
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(200,149,108,0.2);color:#A89A88;font-size:16px;">Dream destination / Travelers</div>
+        <div style="padding:14px 16px;border-bottom:1px solid rgba(200,149,108,0.2);color:#A89A88;font-size:16px;">Preferred travel dates</div>
+        <div style="padding:14px 16px;border:1px solid rgba(200,149,108,0.15);border-radius:8px;color:#A89A88;font-size:16px;height:60px;">Message...</div>
+        <div style="padding:16px;background:#2A2420;color:#F5F0EB;text-align:center;font-size:15px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;">Send Inquiry</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const elements = {};
+const originalPositions = {};
+
+document.querySelectorAll('.draggable').forEach(el => {
+  const id = el.id;
+  elements[id] = el;
+  originalPositions[id] = {
+    left: el.style.left,
+    top: el.style.top,
+    bottom: el.style.bottom
+  };
+
+  let isDragging = false;
+  let startX, startY, origLeft, origTop;
+
+  el.addEventListener('mousedown', (e) => {
+    if (e.target.tagName === 'A') return;
+    isDragging = true;
+    el.classList.add('active');
+
+    const rect = el.getBoundingClientRect();
+    const parent = el.parentElement.getBoundingClientRect();
+
+    startX = e.clientX;
+    startY = e.clientY;
+    origLeft = rect.left - parent.left;
+    origTop = rect.top - parent.top;
+
+    // Remove transform for direct positioning
+    el.style.transform = 'none';
+    el.style.left = origLeft + 'px';
+    el.style.top = origTop + 'px';
+    el.style.bottom = 'auto';
+
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    el.style.left = (origLeft + dx) + 'px';
+    el.style.top = (origTop + dy) + 'px';
+    updateCoords(el);
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      el.classList.remove('active');
+    }
+  });
+
+  updateCoords(el);
+});
+
+function updateCoords(el) {
+  const parent = el.parentElement;
+  const pW = parent.offsetWidth;
+  const pH = parent.offsetHeight;
+  const rect = el.getBoundingClientRect();
+  const parentRect = parent.getBoundingClientRect();
+
+  const leftPx = rect.left - parentRect.left;
+  const topPx = rect.top - parentRect.top;
+  const leftPct = ((leftPx / pW) * 100).toFixed(2);
+  const topPct = ((topPx / pH) * 100).toFixed(2);
+
+  const coordsEl = el.querySelector('.drag-coords');
+  if (coordsEl) {
+    coordsEl.textContent = `left:${leftPct}% top:${topPct}%`;
+  }
+}
+
+function copyAllPositions() {
+  const positions = {};
+
+  document.querySelectorAll('.draggable').forEach(el => {
+    const parent = el.parentElement;
+    const pW = parent.offsetWidth;
+    const pH = parent.offsetHeight;
+    const rect = el.getBoundingClientRect();
+    const parentRect = parent.getBoundingClientRect();
+
+    const leftPx = rect.left - parentRect.left;
+    const topPx = rect.top - parentRect.top;
+
+    positions[el.id] = {
+      section: el.dataset.section,
+      name: el.dataset.name,
+      left: ((leftPx / pW) * 100).toFixed(2) + '%',
+      top: ((topPx / pH) * 100).toFixed(2) + '%',
+      leftPx: Math.round(leftPx) + 'px',
+      topPx: Math.round(topPx) + 'px'
+    };
+  });
+
+  const text = JSON.stringify(positions, null, 2);
+  navigator.clipboard.writeText(text).then(() => {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2000);
+  });
+}
+
+function resetAll() {
+  Object.keys(originalPositions).forEach(id => {
+    const el = elements[id];
+    const pos = originalPositions[id];
+    el.style.left = pos.left;
+    el.style.top = pos.top;
+    el.style.bottom = pos.bottom;
+    // Restore transforms
+    if (id === 'hero-tagline' || id === 'hiw-title' || id === 'hiw-hint' || id === 'hero-scroll') {
+      el.style.transform = 'translateX(-50%)';
+    } else if (id === 'about-photo' || id === 'about-text') {
+      el.style.transform = 'translateY(-50%)';
+    } else if (id === 'gs-form') {
+      el.style.transform = 'translate(-50%,-50%)';
+    } else {
+      el.style.transform = 'none';
+    }
+    updateCoords(el);
+  });
+}
+
+// Section nav dots
+const sections = document.querySelectorAll('.section-container');
+const navHint = document.getElementById('navHint');
+const sectionNames = ['Hero', 'How It Works', 'Travel Guides', 'About', 'Get Started'];
+
+sections.forEach((sec, i) => {
+  const dot = document.createElement('a');
+  dot.title = sectionNames[i];
+  dot.onclick = () => sec.scrollIntoView({ behavior: 'smooth' });
+  navHint.appendChild(dot);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const idx = Array.from(sections).indexOf(entry.target);
+      document.getElementById('currentSection').textContent = sectionNames[idx];
+      navHint.querySelectorAll('a').forEach((d, i) => {
+        d.classList.toggle('active', i === idx);
+      });
+    }
+  });
+}, { threshold: 0.5 });
+
+sections.forEach(sec => observer.observe(sec));
+</script>
+</body>
+</html>
