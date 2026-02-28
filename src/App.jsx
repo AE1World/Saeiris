@@ -77,89 +77,91 @@ function HeroSection(){
 // ══════════════════════════════════════════════════════════════
 // SECTION 2: HOW IT WORKS — clean minimal cards over image bg
 // ══════════════════════════════════════════════════════════════
+function ServiceModal({service,onClose}){
+  if(!service)return null;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.85)",backdropFilter:"blur(20px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:580,maxHeight:"80vh",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 40px 120px rgba(0,0,0,0.4)"}}>
+        <div style={{padding:"36px 36px 32px"}}>
+          <div style={{fontSize:36,marginBottom:14}}>{service.icon}</div>
+          <h3 style={{fontSize:28,fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 6px"}}>{service.title}</h3>
+          <div style={{width:32,height:1,background:"#C8956C",margin:"12px 0 20px"}}/>
+          <p style={{fontSize:15,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 20px"}}>{service.desc}</p>
+          {service.details&&service.details.map((d,i)=>(
+            <div key={i} style={{padding:"14px 16px",background:"rgba(200,149,108,0.05)",border:"1px solid rgba(200,149,108,0.1)",marginBottom:10}}>
+              <div style={{fontSize:13,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:4}}>{d.title}</div>
+              <div style={{fontSize:12.5,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.6}}>{d.text}</div>
+            </div>
+          ))}
+          <button onClick={onClose} style={{marginTop:16,padding:"12px 28px",background:"#2A2420",color:"#F5F0EB",border:"none",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.1em",textTransform:"uppercase",transition:"all 0.3s"}}
+            onMouseOver={e=>e.currentTarget.style.background="#C8956C"}
+            onMouseOut={e=>e.currentTarget.style.background="#2A2420"}>
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SERVICES=[
+  {icon:"🌍",title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — a growing, living map of real travel moments captured on real film cameras by real travelers.",
+    details:[
+      {title:"How It Works",text:"After your trip, send back the Canon AE-1. We develop your film, scan each frame in high resolution, and upload your best shots to the PhotoGlobe with your name and destination."},
+      {title:"Your Legacy",text:"Every pin on the globe is a real moment from a real trip. Your photos become part of a worldwide community of analog travelers."},
+    ]},
+  {icon:"✈",title:"Full-Service Planning",desc:"We handle every detail of your trip — flights, accommodations, excursions, restaurant reservations, and local transportation. You just show up and be present.",
+    details:[
+      {title:"What's Included",text:"Round-trip flights & airport transfers · Hand-picked boutique hotels & Airbnbs · Custom day-by-day itinerary · Restaurant reservations with menu picks · Emergency travel support 24/7"},
+      {title:"Our Approach",text:"We negotiate directly with hosts and local operators to get you the best rates. Every itinerary is custom-built based on your interests, pace, and budget."},
+    ]},
+  {icon:"📷",title:"Canon AE-1 Experience",desc:"Before every trip, we ship a vintage Canon AE-1 loaded with a fresh roll of Kodak UltraMax 400 to your door. 36 exposures. No filters. No edits. Just you and the world.",
+    details:[
+      {title:"What You Get",text:"A fully serviced 1976 Canon AE-1 with 50mm f/1.8 lens · One roll of Kodak UltraMax 400 (36 exposures) · A quick-start guide for film beginners · Prepaid return shipping label"},
+      {title:"After Your Trip",text:"Ship the camera back to us. We develop your film, scan every frame at high resolution, and deliver your photos digitally within 2 weeks. The best shots join the Globe."},
+    ]},
+];
+
 function HowItWorksSection(){
-  const[debug,setDebug]=useState(true); // SET TO false WHEN DONE
-  const[hotspots,setHotspots]=useState([
-    {left:5,top:15,width:25,height:55,rotation:0,label:"Map → Join the Globe"},
-    {left:38,top:10,width:25,height:45,rotation:0,label:"Boarding Pass → Full-Service Planning"},
-    {left:65,top:25,width:25,height:55,rotation:0,label:"Passport → Canon AE-1 Experience"},
-  ]);
-  const dragRef=useRef(null);
-  const resizeRef=useRef(null);
-  const rotateRef=useRef(null);
-  const startRef=useRef(null);
-  const sectionRef=useRef(null);
-
-  const onMD=(e,idx,type)=>{
-    if(!debug)return;
-    e.preventDefault();e.stopPropagation();
-    if(type==="move")dragRef.current=idx;
-    else if(type==="resize")resizeRef.current=idx;
-    else if(type==="rotate")rotateRef.current=idx;
-    startRef.current={x:e.clientX,y:e.clientY,...hotspots[idx]};
-  };
-
-  useEffect(()=>{
-    if(!debug)return;
-    const onMove=(e)=>{
-      const rect=sectionRef.current?.getBoundingClientRect();
-      if(!rect||!startRef.current)return;
-      const wP=100/rect.width,hP=100/rect.height;
-      if(dragRef.current!==null){
-        const dx=(e.clientX-startRef.current.x)*wP,dy=(e.clientY-startRef.current.y)*hP;
-        setHotspots(p=>{const n=[...p];n[dragRef.current]={...n[dragRef.current],left:startRef.current.left+dx,top:startRef.current.top+dy};return n;});
-      }
-      if(resizeRef.current!==null){
-        const dx=(e.clientX-startRef.current.x)*wP,dy=(e.clientY-startRef.current.y)*hP;
-        setHotspots(p=>{const n=[...p];n[resizeRef.current]={...n[resizeRef.current],width:Math.max(3,startRef.current.width+dx),height:Math.max(3,startRef.current.height+dy)};return n;});
-      }
-      if(rotateRef.current!==null){
-        const dx=e.clientX-startRef.current.x;
-        setHotspots(p=>{const n=[...p];n[rotateRef.current]={...n[rotateRef.current],rotation:startRef.current.rotation+dx*0.5};return n;});
-      }
-    };
-    const onUp=()=>{dragRef.current=null;resizeRef.current=null;rotateRef.current=null;startRef.current=null;};
-    window.addEventListener("mousemove",onMove);
-    window.addEventListener("mouseup",onUp);
-    return()=>{window.removeEventListener("mousemove",onMove);window.removeEventListener("mouseup",onUp);};
-  },[debug]);
-
-  const copyPos=()=>{
-    const txt=hotspots.map((h,i)=>`${h.label}: left=${h.left.toFixed(2)}, top=${h.top.toFixed(2)}, width=${h.width.toFixed(2)}, height=${h.height.toFixed(2)}, rotation=${h.rotation.toFixed(1)}`).join("\n");
-    navigator.clipboard.writeText(txt);
-    alert("Copied! Paste these to me:\n\n"+txt);
-  };
+  const[activeService,setActiveService]=useState(null);
+  const[hoveredIdx,setHoveredIdx]=useState(null);
+  const hotspots=[
+    {left:-5.51,top:0.12,width:34.83,height:76.33,rotation:-13.5,serviceIdx:0},
+    {left:40.30,top:18.10,width:26.83,height:22.02,rotation:10.5,serviceIdx:1},
+    {left:69.24,top:46.23,width:13.49,height:40.56,rotation:27.5,serviceIdx:2},
+  ];
 
   return(
-    <section ref={sectionRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Background image — full opacity, no overlay */}
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+      {/* Background image — full opacity */}
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}/>
 
       {/* Title */}
-      <div style={{position:"absolute",top:"8%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2}}>
-        <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 16px rgba(248,244,240,0.9)"}}>
+      <div style={{position:"absolute",top:"8%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
+        <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 20px rgba(248,244,240,1), 0 0 40px rgba(248,244,240,0.8)"}}>
           Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
         </h2>
       </div>
 
-      {/* Debug toolbar */}
-      {debug&&<div style={{position:"absolute",bottom:12,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",gap:8}}>
-        <button onClick={copyPos} style={{padding:"8px 16px",background:"#2A2420",color:"#fff",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>📋 Copy Positions</button>
-        <button onClick={()=>setDebug(false)} style={{padding:"8px 16px",background:"#C8956C",color:"#fff",border:"none",borderRadius:6,fontSize:12,cursor:"pointer",fontFamily:"monospace"}}>✓ Done</button>
-      </div>}
+      {/* Subtitle hint */}
+      <div style={{position:"absolute",bottom:"6%",left:"50%",transform:"translateX(-50%)",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
+        <p style={{fontSize:13,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.06em",textShadow:"0 1px 8px rgba(248,244,240,0.9)"}}>Click the objects to learn more</p>
+      </div>
 
-      {/* 3 draggable/resizable/rotatable hotspots */}
+      {/* Interactive hotspots */}
       {hotspots.map((h,i)=>(
-        <div key={i} style={{position:"absolute",left:h.left+"%",top:h.top+"%",width:h.width+"%",height:h.height+"%",transform:`rotate(${h.rotation}deg)`,zIndex:1,border:debug?"2px solid rgba(220,120,50,0.7)":"none",background:debug?"rgba(220,120,50,0.15)":"transparent",boxSizing:"border-box",borderRadius:4}}>
-          <div onMouseDown={e=>onMD(e,i,"move")} style={{width:"100%",height:"100%",cursor:debug?"grab":"pointer"}}/>
-          {/* Resize handle — bottom right (orange) */}
-          {debug&&<div onMouseDown={e=>onMD(e,i,"resize")} style={{position:"absolute",bottom:-5,right:-5,width:12,height:12,background:"#C8956C",borderRadius:2,cursor:"nwse-resize",zIndex:2}}/>}
-          {/* Rotate handle — top right (blue) */}
-          {debug&&<div onMouseDown={e=>onMD(e,i,"rotate")} style={{position:"absolute",top:-5,right:-5,width:12,height:12,background:"#4A90D9",borderRadius:"50%",cursor:"crosshair",zIndex:2}}/>}
-          {/* Label */}
-          {debug&&<div style={{position:"absolute",top:-20,left:0,fontSize:9,color:"#fff",fontFamily:"monospace",whiteSpace:"nowrap",background:"rgba(0,0,0,0.8)",padding:"2px 6px",borderRadius:2}}>{h.label} r:{h.rotation.toFixed(0)}° ({h.left.toFixed(1)},{h.top.toFixed(1)} {h.width.toFixed(1)}x{h.height.toFixed(1)})</div>}
+        <div key={i}
+          onClick={()=>setActiveService(SERVICES[h.serviceIdx])}
+          onMouseEnter={()=>setHoveredIdx(i)}
+          onMouseLeave={()=>setHoveredIdx(null)}
+          style={{position:"absolute",left:h.left+"%",top:h.top+"%",width:h.width+"%",height:h.height+"%",transform:`rotate(${h.rotation}deg)`,zIndex:1,cursor:"pointer",borderRadius:6,transition:"all 0.4s ease",boxShadow:hoveredIdx===i?"0 0 30px rgba(200,149,108,0.4), inset 0 0 30px rgba(200,149,108,0.08)":"none",background:hoveredIdx===i?"rgba(200,149,108,0.08)":"transparent",border:hoveredIdx===i?"1px solid rgba(200,149,108,0.25)":"1px solid transparent"}}>
+          {/* Service label on hover */}
+          {hoveredIdx===i&&<div style={{position:"absolute",bottom:"105%",left:"50%",transform:"translateX(-50%) rotate("+(-h.rotation)+"deg)",whiteSpace:"nowrap",padding:"6px 14px",background:"rgba(42,36,32,0.85)",backdropFilter:"blur(8px)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
+            <span style={{fontSize:12,fontWeight:600,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.08em"}}>{SERVICES[h.serviceIdx].icon} {SERVICES[h.serviceIdx].title}</span>
+          </div>}
         </div>
       ))}
+      <ServiceModal service={activeService} onClose={()=>setActiveService(null)}/>
     </section>
   );
 }
