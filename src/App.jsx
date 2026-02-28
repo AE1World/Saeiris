@@ -80,20 +80,19 @@ function HeroSection(){
 function ServiceModal({service,onClose}){
   if(!service)return null;
   return(
-    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.85)",backdropFilter:"blur(20px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{width:580,maxHeight:"80vh",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 40px 120px rgba(0,0,0,0.4)"}}>
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.4)",backdropFilter:"blur(10px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+      <div style={{width:580,maxHeight:"80vh",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 40px 120px rgba(0,0,0,0.3)"}}>
         <div style={{padding:"36px 36px 32px"}}>
-          <div style={{fontSize:36,marginBottom:14}}>{service.icon}</div>
-          <h3 style={{fontSize:28,fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 6px"}}>{service.title}</h3>
+          <h3 style={{fontSize:30,fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:"0 0 6px"}}>{service.title}</h3>
           <div style={{width:32,height:1,background:"#C8956C",margin:"12px 0 20px"}}/>
-          <p style={{fontSize:15,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 20px"}}>{service.desc}</p>
+          <p style={{fontSize:17,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 20px"}}>{service.desc}</p>
           {service.details&&service.details.map((d,i)=>(
             <div key={i} style={{padding:"14px 16px",background:"rgba(200,149,108,0.05)",border:"1px solid rgba(200,149,108,0.1)",marginBottom:10}}>
-              <div style={{fontSize:13,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:4}}>{d.title}</div>
-              <div style={{fontSize:12.5,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.6}}>{d.text}</div>
+              <div style={{fontSize:15,fontWeight:600,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:4}}>{d.title}</div>
+              <div style={{fontSize:14.5,color:"#6A5A48",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.6}}>{d.text}</div>
             </div>
           ))}
-          <button onClick={onClose} style={{marginTop:16,padding:"12px 28px",background:"#2A2420",color:"#F5F0EB",border:"none",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.1em",textTransform:"uppercase",transition:"all 0.3s"}}
+          <button onClick={onClose} style={{marginTop:16,padding:"12px 28px",background:"#2A2420",color:"#F5F0EB",border:"none",fontSize:15,fontWeight:600,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.1em",textTransform:"uppercase",transition:"all 0.3s"}}
             onMouseOver={e=>e.currentTarget.style.background="#C8956C"}
             onMouseOut={e=>e.currentTarget.style.background="#2A2420"}>
             Close
@@ -105,17 +104,17 @@ function ServiceModal({service,onClose}){
 }
 
 const SERVICES=[
-  {icon:"🌍",title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — a growing, living map of real travel moments captured on real film cameras by real travelers.",
+  {title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — a growing, living map of real travel moments captured on real film cameras by real travelers.",
     details:[
       {title:"How It Works",text:"After your trip, send back the Canon AE-1. We develop your film, scan each frame in high resolution, and upload your best shots to the PhotoGlobe with your name and destination."},
       {title:"Your Legacy",text:"Every pin on the globe is a real moment from a real trip. Your photos become part of a worldwide community of analog travelers."},
     ]},
-  {icon:"✈",title:"Full-Service Planning",desc:"We handle every detail of your trip — flights, accommodations, excursions, restaurant reservations, and local transportation. You just show up and be present.",
+  {title:"Full-Service Planning",desc:"We handle every detail of your trip — flights, accommodations, excursions, restaurant reservations, and local transportation. You just show up and be present.",
     details:[
       {title:"What's Included",text:"Round-trip flights & airport transfers · Hand-picked boutique hotels & Airbnbs · Custom day-by-day itinerary · Restaurant reservations with menu picks · Emergency travel support 24/7"},
       {title:"Our Approach",text:"We negotiate directly with hosts and local operators to get you the best rates. Every itinerary is custom-built based on your interests, pace, and budget."},
     ]},
-  {icon:"📷",title:"Canon AE-1 Experience",desc:"Before every trip, we ship a vintage Canon AE-1 loaded with a fresh roll of Kodak UltraMax 400 to your door. 36 exposures. No filters. No edits. Just you and the world.",
+  {title:"Canon AE-1 Experience",desc:"Before every trip, we ship a vintage Canon AE-1 loaded with a fresh roll of Kodak UltraMax 400 to your door. 36 exposures. No filters. No edits. Just you and the world.",
     details:[
       {title:"What You Get",text:"A fully serviced 1976 Canon AE-1 with 50mm f/1.8 lens · One roll of Kodak UltraMax 400 (36 exposures) · A quick-start guide for film beginners · Prepaid return shipping label"},
       {title:"After Your Trip",text:"Ship the camera back to us. We develop your film, scan every frame at high resolution, and deliver your photos digitally within 2 weeks. The best shots join the Globe."},
@@ -157,7 +156,7 @@ function HowItWorksSection(){
           style={{position:"absolute",left:h.left+"%",top:h.top+"%",width:h.width+"%",height:h.height+"%",transform:`rotate(${h.rotation}deg)`,zIndex:1,cursor:"pointer",borderRadius:6,transition:"all 0.4s ease",boxShadow:hoveredIdx===i?"0 0 30px rgba(200,149,108,0.4), inset 0 0 30px rgba(200,149,108,0.08)":"none",background:hoveredIdx===i?"rgba(200,149,108,0.08)":"transparent",border:hoveredIdx===i?"1px solid rgba(200,149,108,0.25)":"1px solid transparent"}}>
           {/* Service label on hover */}
           {hoveredIdx===i&&<div style={{position:"absolute",bottom:"105%",left:"50%",transform:"translateX(-50%) rotate("+(-h.rotation)+"deg)",whiteSpace:"nowrap",padding:"6px 14px",background:"rgba(42,36,32,0.85)",backdropFilter:"blur(8px)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
-            <span style={{fontSize:12,fontWeight:600,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.08em"}}>{SERVICES[h.serviceIdx].icon} {SERVICES[h.serviceIdx].title}</span>
+            <span style={{fontSize:12,fontWeight:600,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.08em"}}>{SERVICES[h.serviceIdx].title}</span>
           </div>}
         </div>
       ))}
@@ -181,7 +180,7 @@ const GUIDES=[
 function GuideModal({guide,onClose}){
   if(!guide)return null;
   return(
-    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.85)",backdropFilter:"blur(20px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
+    <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.4)",backdropFilter:"blur(10px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
       <div style={{width:640,maxHeight:"85vh",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 40px 120px rgba(0,0,0,0.4)"}}>
         <div style={{height:260,background:`url(${guide.img}) center/cover`,position:"relative"}}>
           <button onClick={onClose} style={{position:"absolute",top:14,right:14,width:34,height:34,borderRadius:"50%",background:"rgba(0,0,0,0.4)",border:"none",color:"#fff",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)"}}>×</button>
@@ -264,14 +263,14 @@ function AboutSection(){
           <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
         </div>
         <div style={{flex:1}}>
-          <div style={{fontSize:10,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Our Story</div>
-          <h2 style={{fontSize:"clamp(28px,3.2vw,40px)",fontWeight:300,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.2,margin:"0 0 22px"}}>
+          <div style={{fontSize:12,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Our Story</div>
+          <h2 style={{fontSize:"clamp(30px,3.2vw,42px)",fontWeight:300,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.2,margin:"0 0 22px"}}>
             Built on a love of<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>travel & film</span>
           </h2>
-          <p style={{fontSize:14,color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 16px"}}>
+          <p style={{fontSize:16,color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:"0 0 16px"}}>
             We're Josh and Bella — a couple who fell in love with the world through the lens of a 1976 Canon AE-1. What started as a hobby on our first trip to Europe in Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.
           </p>
-          <p style={{fontSize:14,color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:0}}>
+          <p style={{fontSize:16,color:"rgba(245,240,235,0.6)",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8,margin:0}}>
             AE-1 Viewpoint was born from the belief that the best trips aren't the most expensive — they're the most intentional. We plan every detail so you can be present, camera in hand, capturing moments the way they were meant to be captured.
           </p>
           <div style={{width:40,height:1,background:"#C8956C",marginTop:24}}/>
@@ -301,7 +300,6 @@ function GetStartedSection(){
         </p>
         {submitted?(
           <div style={{padding:"36px",borderRadius:12,background:"rgba(200,149,108,0.05)",border:"1px solid rgba(200,149,108,0.12)"}}>
-            <div style={{fontSize:34,marginBottom:10}}>✈️</div>
             <div style={{fontSize:20,fontWeight:400,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>We'll be in touch!</div>
             <div style={{fontSize:14,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif"}}>Check your email for next steps.</div>
           </div>
