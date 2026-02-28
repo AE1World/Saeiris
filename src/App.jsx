@@ -58,7 +58,7 @@ function HeroSection(){
       </div>
 
       {/* Tagline — centered upper area */}
-      <div style={{position:"absolute",top:"17.51%",left:"37.66%",textAlign:"center",zIndex:2}}>
+      <div style={{position:"absolute",top:"50%",left:"37.66%",transform:"translateY(-50%)",textAlign:"center",zIndex:2}}>
         <h1 style={{fontSize:"clamp(38px,5.5vw,72px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.08,margin:0,letterSpacing:"-0.02em"}}>
           Your Journey.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>On Film.</span>
         </h1>
@@ -136,7 +136,7 @@ function HowItWorksSection(){
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}/>
 
       {/* Title */}
-      <div style={{position:"absolute",top:"46.92%",left:"33.94%",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
+      <div style={{position:"absolute",top:"50%",left:"33.94%",transform:"translateY(-50%)",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
         <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 20px rgba(248,244,240,1), 0 0 40px rgba(248,244,240,0.8)"}}>
           Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
         </h2>
