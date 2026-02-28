@@ -208,7 +208,7 @@ function AboutSection(){
       <div style={{position:"absolute",inset:0,opacity:0.06,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
       <div style={{position:"relative",zIndex:1,display:"flex",alignItems:"center",gap:60,maxWidth:1100,padding:"0 80px",width:"100%"}}>
         <div style={{flex:"0 0 400px",height:480,borderRadius:8,border:"1px solid rgba(200,149,108,0.12)",overflow:"hidden"}}>
-          <img src="/about-photo.jpg" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
+          <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
         </div>
         <div style={{flex:1}}>
           <div style={{fontSize:10,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:14}}>Our Story</div>
