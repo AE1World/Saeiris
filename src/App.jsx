@@ -58,7 +58,7 @@ function HeroSection(){
       </div>
 
       {/* Tagline — centered upper area */}
-      <div style={{position:"absolute",top:"50%",left:"37.66%",transform:"translateY(-50%)",textAlign:"center",zIndex:2}}>
+      <div style={{position:"absolute",top:"30%",left:"37.66%",transform:"translateY(-50%)",textAlign:"center",zIndex:2}}>
         <h1 style={{fontSize:"clamp(38px,5.5vw,72px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.08,margin:0,letterSpacing:"-0.02em"}}>
           Your Journey.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>On Film.</span>
         </h1>
