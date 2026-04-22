@@ -13,7 +13,10 @@
     "@supabase/supabase-js": "^2.97.0",
     "d3": "^7.9.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-globe.gl": "^2.37.1",
+    "three": "^0.184.0",
+    "three-globe": "^2.45.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

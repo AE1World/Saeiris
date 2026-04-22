@@ -1,45 +1,12 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
-import * as d3 from "d3";
 
 // ══════════════════════════════════════════════════════════════
-// AE-1 WORLD — PhotoGlobe with D3 Orthographic Projection
+// AE-1 WORLD — PhotoGlobe v4
+// - Local 8K NASA texture (earth-day-8k.jpg in /public)
+// - Bump map for terrain relief
+// - Smooth WebGL rotation via react-globe.gl
 // ══════════════════════════════════════════════════════════════
-
-// TopoJSON → GeoJSON
-function decodeTopo(topo,name){
-  const obj=topo.objects[name];if(!obj)return[];
-  const{arcs:ta,transform:tr}=topo;const sc=tr?.scale||[1,1],tl=tr?.translate||[0,0];
-  function decArc(idx){const arc=ta[idx<0?~idx:idx];const coords=[];let x=0,y=0;for(const[dx,dy]of arc){x+=dx;y+=dy;coords.push([x*sc[0]+tl[0],y*sc[1]+tl[1]]);}if(idx<0)coords.reverse();return coords;}
-  function ring2c(ring){const c=[];for(const ai of ring){const ac=decArc(ai);const s=c.length>0?1:0;for(let i=s;i<ac.length;i++)c.push(ac[i]);}return c;}
-  const feats=[];const geoms=obj.type==="GeometryCollection"?obj.geometries:[obj];
-  for(const g of geoms){
-    let geojson;
-    if(g.type==="Polygon"){
-      geojson={type:"Polygon",coordinates:g.arcs.map(ring2c)};
-    }else if(g.type==="MultiPolygon"){
-      geojson={type:"MultiPolygon",coordinates:g.arcs.map(p=>p.map(ring2c))};
-    }
-    if(geojson)feats.push({type:"Feature",geometry:geojson,properties:{}});
-  }
-  return feats;
-}
-
-function useWorldMap(){const[feats,setFeats]=useState([]);const[loading,setLoading]=useState(true);
-useEffect(()=>{fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json").then(r=>r.json()).then(t=>{setFeats(decodeTopo(t,"countries"));setLoading(false);}).catch(()=>setLoading(false));},[]);return{feats,loading};}
-
-function getLandColor(cLat,cLon){const a=Math.abs(cLat);
-if(a>68)return{fill:"#D2DDD0",stroke:"#B8C8B4"};if(a>62)return{fill:"#C4D6B8",stroke:"#AABF9E"};if(a>55)return{fill:"#8CB580",stroke:"#74A068"};
-if(a>40){if((cLon>-130&&cLon<-115&&cLat>40)||(cLon>-10&&cLon<5&&cLat>45))return{fill:"#7AB470",stroke:"#62A058"};return{fill:"#96BE86",stroke:"#7EA870"};}
-if(a>28){if((cLon>-17&&cLon<60&&cLat>15&&cLat<38)||(cLon>50&&cLon<75&&cLat>25))return{fill:"#DCCB9A",stroke:"#C8B888"};if(cLon>115&&cLon<150&&cLat<-20)return{fill:"#D6BC82",stroke:"#C2A870"};return{fill:"#A4C480",stroke:"#8CB068"};}
-if(a>12){if(cLon>-20&&cLon<55&&cLat>10&&cLat<20)return{fill:"#D0BE84",stroke:"#BCA870"};if(cLon>68&&cLon<92&&cLat>8)return{fill:"#90BC72",stroke:"#78A65C"};return{fill:"#AECA7E",stroke:"#96B466"};}
-if((cLon>-82&&cLon<-34&&cLat>-15&&cLat<12)||(cLon>8&&cLon<35&&a<8)||(cLon>95&&cLon<140&&a<15))return{fill:"#6AAE5C",stroke:"#529844"};return{fill:"#72B262",stroke:"#5A9C4A"};}
-
-function featureCentroid(feat){
-  const c=d3.geoCentroid(feat.geometry);
-  return{lat:c[1],lon:c[0]};
-}
-function orthoProject(lat,lon,rLat,rLon,R,cx,cy){const phi=lat*Math.PI/180,lam=(lon-rLon)*Math.PI/180,phi0=rLat*Math.PI/180;const cosC=Math.sin(phi0)*Math.sin(phi)+Math.cos(phi0)*Math.cos(phi)*Math.cos(lam);if(cosC<0)return null;return{x:cx+R*Math.cos(phi)*Math.sin(lam),y:cy-R*(Math.cos(phi0)*Math.sin(phi)-Math.sin(phi0)*Math.cos(phi)*Math.cos(lam)),cosC};}
 
 function timeAgo(ts){if(!ts)return"";const d=Math.floor((Date.now()-new Date(ts).getTime())/864e5);if(d<1)return"Today";if(d===1)return"Yesterday";if(d<30)return d+"d ago";if(d<365)return Math.floor(d/30)+"mo ago";return Math.floor(d/365)+"y ago";}
 function fmtDate(ts){if(!ts)return"";return new Date(ts).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"});}
@@ -50,25 +17,17 @@ function AuthModal({onClose,onAuth}){
   const[mode,setMode]=useState("login");const[email,setEmail]=useState("");const[password,setPassword]=useState("");
   const[username,setUsername]=useState("");const[displayName,setDisplayName]=useState("");
   const[error,setError]=useState(null);const[loading,setLoading]=useState(false);
-
   const handleSubmit=async()=>{
     setError(null);setLoading(true);
     try{
-      if(mode==="login"){
-        const{error}=await supabase.auth.signInWithPassword({email,password});
-        if(error)throw error;
-      }else{
-        const{error}=await supabase.auth.signUp({email,password,options:{data:{username,display_name:displayName||username}}});
-        if(error)throw error;
-      }
+      if(mode==="login"){const{error}=await supabase.auth.signInWithPassword({email,password});if(error)throw error;}
+      else{const{error}=await supabase.auth.signUp({email,password,options:{data:{username,display_name:displayName||username}}});if(error)throw error;}
       onAuth();onClose();
     }catch(e){setError(e.message);}
     setLoading(false);
   };
-
   const iS={background:"#0D1F2D",border:"1px solid #1A3040",borderRadius:10,padding:"12px 14px",color:"#E0EEF4",fontSize:14,outline:"none",width:"100%",fontFamily:"'DM Sans',sans-serif"};
   const lS={fontSize:11,color:"#5A8CA8",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6,display:"block"};
-
   return(<div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,10,20,0.7)",backdropFilter:"blur(20px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={{width:420,background:"#0A1620",borderRadius:24,border:"1px solid #1A3040",padding:"32px 28px",boxShadow:"0 40px 100px rgba(0,0,0,0.4)"}}>
       <h3 style={{fontSize:22,fontWeight:700,color:"#E0EEF4",margin:"0 0 4px"}}>{mode==="login"?"Welcome Back":"Join AE-1 World"}</h3>
@@ -79,81 +38,118 @@ function AuthModal({onClose,onAuth}){
       <label><span style={lS}>Email</span><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" style={{...iS,marginBottom:12}}/></label>
       <label><span style={lS}>Password</span><input type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" style={{...iS,marginBottom:20}} onKeyDown={e=>e.key==="Enter"&&handleSubmit()}/></label>
       <button onClick={handleSubmit} disabled={loading} style={{width:"100%",padding:"14px",borderRadius:12,background:"linear-gradient(135deg,#FF6B35,#ff8c5a)",color:"#fff",border:"none",fontWeight:700,fontSize:14,cursor:"pointer",marginBottom:16,opacity:loading?0.6:1}}>{loading?"...":(mode==="login"?"Sign In":"Create Account")}</button>
-      <div style={{textAlign:"center",fontSize:13,color:"#5A8CA8"}}>{mode==="login"?"Don't have an account? ":"Already have an account? "}<button onClick={()=>{setMode(mode==="login"?"signup":"login");setError(null);}} style={{background:"none",border:"none",color:"#2AA6D4",cursor:"pointer",fontWeight:600,fontSize:13}}>{ mode==="login"?"Sign Up":"Sign In"}</button></div>
+      <div style={{textAlign:"center",fontSize:13,color:"#5A8CA8"}}>{mode==="login"?"Don't have an account? ":"Already have an account? "}<button onClick={()=>{setMode(mode==="login"?"signup":"login");setError(null);}} style={{background:"none",border:"none",color:"#2AA6D4",cursor:"pointer",fontWeight:600,fontSize:13}}>{mode==="login"?"Sign Up":"Sign In"}</button></div>
     </div>
   </div>);
 }
 
-// ── Globe Canvas with D3 Orthographic Projection ──
-function GlobeCanvas({photos,selectedId,onSelect,rotation,onRotate,globeScale,onScaleChange}){
-  const canvasRef=useRef(null);const containerRef=useRef(null);const[dims,setDims]=useState({w:900,h:700});
-  const{feats,loading}=useWorldMap();const dragging=useRef(false);const dragMoved=useRef(false);const lastM=useRef({x:0,y:0});const hovered=useRef(null);
-  const featColors=useMemo(()=>feats.map(f=>{const c=featureCentroid(f);return getLandColor(c.lat,c.lon);}),[feats]);
-  useEffect(()=>{const ro=new ResizeObserver(e=>{for(const en of e)setDims({w:en.contentRect.width,h:en.contentRect.height});});if(containerRef.current)ro.observe(containerRef.current);return()=>ro.disconnect();},[]);
-  const R=useMemo(()=>Math.min(dims.w,dims.h)*0.42*globeScale,[dims,globeScale]);const cx=dims.w/2,cy=dims.h/2;
+// ── Globe Canvas ──
+function GlobeCanvas({photos, selectedId, onSelect}){
+  const globeRef = useRef();
+  const containerRef = useRef();
+  const [GlobeComponent, setGlobeComponent] = useState(null);
+  const [dims, setDims] = useState({w: window.innerWidth, h: window.innerHeight});
 
-  // D3 projection - handles clipping correctly
-  const projection=useMemo(()=>d3.geoOrthographic().translate([cx,cy]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(1),[cx,cy,R,rotation]);
-  const pathGen=useMemo(()=>d3.geoPath(projection),[projection]);
+  // Load react-globe.gl dynamically
+  useEffect(()=>{
+    import('react-globe.gl').then(mod=>{setGlobeComponent(()=>mod.default);});
+  },[]);
 
-  // Keep orthoProject for pins and graticules
-  const proj=useCallback((lat,lon)=>orthoProject(lat,lon,rotation.lat,rotation.lon,R,cx,cy),[R,cx,cy,rotation]);
+  // Resize observer
+  useEffect(()=>{
+    const ro = new ResizeObserver(entries=>{
+      for(const e of entries) setDims({w:e.contentRect.width, h:e.contentRect.height});
+    });
+    if(containerRef.current) ro.observe(containerRef.current);
+    return ()=>ro.disconnect();
+  },[]);
 
-  // Pre-generate graticule once
-  const graticuleData=useMemo(()=>d3.geoGraticule().step([30,20])(),[]);
+  // Controls + bump map once globe is ready
+  useEffect(()=>{
+    if(!globeRef.current) return;
 
-  const draw=useCallback(()=>{
-    const cv=canvasRef.current;if(!cv)return;const ctx=cv.getContext("2d");const dpr=window.devicePixelRatio||1;
-    const cw=dims.w*dpr,ch=dims.h*dpr;
-    if(cv.width!==cw||cv.height!==ch){cv.width=cw;cv.height=ch;}
-    ctx.setTransform(dpr,0,0,dpr,0,0);
-    ctx.fillStyle="#111A24";ctx.fillRect(0,0,dims.w,dims.h);
-    const gSh=ctx.createRadialGradient(cx+6,cy+14,R*0.85,cx+6,cy+14,R*1.2);gSh.addColorStop(0,"rgba(0,0,0,0.25)");gSh.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=gSh;ctx.fillRect(0,0,dims.w,dims.h);
-    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);const oG=ctx.createRadialGradient(cx-R*0.2,cy-R*0.25,R*0.05,cx,cy,R);
-    oG.addColorStop(0,"#3CBAE0");oG.addColorStop(0.3,"#2AA6D4");oG.addColorStop(0.65,"#1E8AB8");oG.addColorStop(0.85,"#145F8A");oG.addColorStop(1,"#0A3A5C");ctx.fillStyle=oG;ctx.fill();
-    ctx.save();ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.clip();
-    // Graticules
-    ctx.strokeStyle="rgba(255,255,255,0.05)";ctx.lineWidth=0.5;
-    ctx.beginPath();pathGen.context(ctx)(graticuleData);ctx.stroke();
-    // Shadow layer
-    const shadowProj=d3.geoOrthographic().translate([cx+3,cy+4]).scale(R).rotate([-rotation.lon,-rotation.lat,0]).clipAngle(90).precision(1);
-    const shadowPath=d3.geoPath(shadowProj).context(ctx);
-    for(let fi=0;fi<feats.length;fi++){ctx.beginPath();shadowPath(feats[fi].geometry);ctx.fillStyle="rgba(0,20,40,0.3)";ctx.fill();}
-    // Countries — single batch for fill, single batch for stroke
-    for(let fi=0;fi<feats.length;fi++){
-      const colors=featColors[fi];
-      ctx.beginPath();pathGen.context(ctx)(feats[fi].geometry);
-      ctx.fillStyle=colors.fill;ctx.fill();ctx.strokeStyle=colors.stroke;ctx.lineWidth=0.6;ctx.stroke();
-    }
-    // Atmosphere overlay
-    const aG=ctx.createRadialGradient(cx-R*0.35,cy-R*0.35,0,cx,cy,R);aG.addColorStop(0,"rgba(255,255,255,0.08)");aG.addColorStop(0.4,"rgba(255,255,255,0.02)");aG.addColorStop(0.75,"rgba(0,0,0,0.02)");aG.addColorStop(1,"rgba(0,20,50,0.15)");ctx.fillStyle=aG;ctx.fillRect(0,0,dims.w,dims.h);
-    ctx.restore();
-    // Globe border
-    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.strokeStyle="rgba(42,166,212,0.3)";ctx.lineWidth=2;ctx.stroke();
-    const oGl=ctx.createRadialGradient(cx,cy,R-2,cx,cy,R+12);oGl.addColorStop(0,"rgba(42,166,212,0.12)");oGl.addColorStop(0.5,"rgba(42,166,212,0.04)");oGl.addColorStop(1,"rgba(42,166,212,0)");ctx.fillStyle=oGl;ctx.beginPath();ctx.arc(cx,cy,R+12,0,Math.PI*2);ctx.fill();
-    // Photo pins
-    const pinR=Math.max(8,Math.min(18,10*globeScale));
-    for(const photo of photos){const p=proj(photo.lat,photo.lon);if(!p)continue;const sel=photo.id===selectedId,hov=photo.id===hovered.current;const r=sel?pinR*1.7:hov?pinR*1.3:pinR;
-      if(sel){ctx.beginPath();ctx.arc(p.x,p.y,r+14,0,Math.PI*2);ctx.fillStyle="rgba(255,107,53,0.12)";ctx.fill();ctx.beginPath();ctx.arc(p.x,p.y,r+7,0,Math.PI*2);ctx.fillStyle="rgba(255,107,53,0.18)";ctx.fill();}
-      ctx.beginPath();ctx.arc(p.x+1,p.y+2,r+1,0,Math.PI*2);ctx.fillStyle="rgba(0,0,0,0.3)";ctx.fill();
-      ctx.beginPath();ctx.arc(p.x,p.y,r,0,Math.PI*2);const g=ctx.createRadialGradient(p.x-r*0.3,p.y-r*0.3,0,p.x,p.y,r);g.addColorStop(0,sel?"#FF9060":"#FF7A45");g.addColorStop(1,sel?"#E04D15":"#FF6B35");ctx.fillStyle=g;ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=sel?3.5:2.5;ctx.stroke();
-      ctx.beginPath();ctx.arc(p.x,p.y,r*0.28,0,Math.PI*2);ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fill();
-      if(sel||hov){const lbl=photo.city;ctx.font='600 12px "DM Sans",system-ui,sans-serif';const tw=ctx.measureText(lbl).width;const by=p.y-r-30;ctx.fillStyle="rgba(10,20,30,0.92)";ctx.beginPath();ctx.roundRect(p.x-tw/2-10,by,tw+20,26,8);ctx.fill();ctx.beginPath();ctx.moveTo(p.x-5,by+26);ctx.lineTo(p.x+5,by+26);ctx.lineTo(p.x,by+32);ctx.closePath();ctx.fill();ctx.fillStyle="#fff";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(lbl,p.x,by+13);}}
-    if(loading){ctx.fillStyle="#8AD";ctx.font='500 14px "DM Sans",sans-serif';ctx.textAlign="center";ctx.fillText("Loading globe...",cx,cy);}
-  },[dims,feats,featColors,photos,selectedId,rotation,R,cx,cy,proj,pathGen,projection,loading,globeScale,graticuleData]);
+    // Smooth rotation + damping
+    const controls = globeRef.current.controls();
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.4;
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    globeRef.current.pointOfView({lat:20, lng:-20, altitude:2.2});
 
-  useEffect(()=>{const f=requestAnimationFrame(draw);return()=>cancelAnimationFrame(f);},[draw]);
-  const hitTest=useCallback((mx,my)=>{const pinR=Math.max(8,Math.min(18,10*globeScale));for(let i=photos.length-1;i>=0;i--){const p=proj(photos[i].lat,photos[i].lon);if(p&&Math.hypot(mx-p.x,my-p.y)<pinR+10)return photos[i].id;}return null;},[photos,proj,globeScale]);
-  const onWheel=useCallback(e=>{e.preventDefault();onScaleChange(Math.max(0.5,Math.min(4,globeScale*(1-e.deltaY*0.001))));},[globeScale,onScaleChange]);
-  const onMD=useCallback(e=>{dragging.current=true;dragMoved.current=false;lastM.current={x:e.clientX,y:e.clientY};canvasRef.current.style.cursor="grabbing";},[]);
-  const onMM=useCallback(e=>{const r=canvasRef.current?.getBoundingClientRect();if(!r)return;if(dragging.current){const dx=e.clientX-lastM.current.x,dy=e.clientY-lastM.current.y;if(Math.abs(dx)>2||Math.abs(dy)>2)dragMoved.current=true;lastM.current={x:e.clientX,y:e.clientY};const s=0.3/globeScale;onRotate({lat:Math.max(-85,Math.min(85,rotation.lat+dy*s)),lon:rotation.lon-dx*s});}else{const mx=e.clientX-r.left,my=e.clientY-r.top;const h=hitTest(mx,my);if(h!==hovered.current){hovered.current=h;draw();}canvasRef.current.style.cursor=h?"pointer":"grab";}},[rotation,globeScale,onRotate,hitTest,draw]);
-  const onMU=useCallback(()=>{dragging.current=false;if(canvasRef.current)canvasRef.current.style.cursor="grab";},[]);
-  const onClick=useCallback(e=>{if(dragMoved.current)return;const r=canvasRef.current?.getBoundingClientRect();if(!r)return;onSelect(hitTest(e.clientX-r.left,e.clientY-r.top));},[hitTest,onSelect]);
-  const lastT=useRef(null);const lastPD=useRef(null);const touchStart=useRef(null);
-  const onTS=useCallback(e=>{if(e.touches.length===1){lastT.current={x:e.touches[0].clientX,y:e.touches[0].clientY};touchStart.current={...lastT.current};}else if(e.touches.length===2)lastPD.current=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);},[]);
-  const onTM=useCallback(e=>{e.preventDefault();if(e.touches.length===1&&lastT.current){const dx=e.touches[0].clientX-lastT.current.x,dy=e.touches[0].clientY-lastT.current.y;lastT.current={x:e.touches[0].clientX,y:e.touches[0].clientY};const s=0.3/globeScale;onRotate({lat:Math.max(-85,Math.min(85,rotation.lat+dy*s)),lon:rotation.lon-dx*s});}else if(e.touches.length===2){const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);if(lastPD.current)onScaleChange(Math.max(0.5,Math.min(4,globeScale*dist/lastPD.current)));lastPD.current=dist;}},[rotation,globeScale,onRotate,onScaleChange]);
-  const onTE=useCallback(e=>{if(e.touches.length===0&&touchStart.current&&lastT.current&&Math.hypot(lastT.current.x-touchStart.current.x,lastT.current.y-touchStart.current.y)<10){const r=canvasRef.current?.getBoundingClientRect();if(r)onSelect(hitTest(lastT.current.x-r.left,lastT.current.y-r.top));}lastT.current=null;lastPD.current=null;touchStart.current=null;},[hitTest,onSelect]);
-  return(<div ref={containerRef} style={{width:"100%",height:"100%",position:"relative"}}><canvas ref={canvasRef} style={{width:"100%",height:"100%",cursor:"grab",display:"block"}} onWheel={onWheel} onMouseDown={onMD} onMouseMove={onMM} onMouseUp={onMU} onMouseLeave={onMU} onClick={onClick} onTouchStart={onTS} onTouchMove={onTM} onTouchEnd={onTE}/></div>);
+    // Apply bump map for terrain relief + boost lighting
+    import('three').then(THREE=>{
+      const mat = globeRef.current.globeMaterial();
+      mat.bumpScale = 12;
+
+      // Bump map — makes mountains physically raised
+      new THREE.TextureLoader().load(
+        '//cdn.jsdelivr.net/npm/three-globe/example/img/earth-topology.png',
+        tex=>{ mat.bumpMap = tex; mat.needsUpdate = true; }
+      );
+
+      // Boost lighting so globe isn't too dark on shadow side
+      const scene = globeRef.current.scene();
+      scene.traverse(obj=>{
+        if(obj.isAmbientLight) obj.intensity = 1.4;
+        if(obj.isDirectionalLight){ obj.intensity = 1.6; obj.position.set(3,1,2); }
+      });
+    });
+  },[GlobeComponent]);
+
+  // Pin data
+  const pointsData = useMemo(()=>photos.map(p=>({
+    ...p,
+    lat: p.lat,
+    lng: p.lon,
+    size: p.id === selectedId ? 1.8 : 1.0,
+    color: p.id === selectedId ? '#FFB347' : '#FF6B35',
+  })),[photos, selectedId]);
+
+  if(!GlobeComponent) return(
+    <div ref={containerRef} style={{width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center'}}>
+      <div style={{color:'#5A8CA8',fontSize:14,fontFamily:"'DM Sans',sans-serif"}}>Loading globe...</div>
+    </div>
+  );
+
+  return(
+    <div ref={containerRef} style={{width:'100%',height:'100%'}}>
+      <GlobeComponent
+        ref={globeRef}
+        width={dims.w}
+        height={dims.h}
+        backgroundColor="rgba(0,0,0,0)"
+
+        // Local 8K NASA texture — sharp at any zoom level
+        globeImageUrl="/earth-day-8k.jpg"
+
+        // Atmosphere glow
+        showAtmosphere={true}
+        atmosphereColor="#5AAAD4"
+        atmosphereAltitude={0.18}
+
+        // Photo pins
+        pointsData={pointsData}
+        pointLat="lat"
+        pointLng="lng"
+        pointColor="color"
+        pointRadius="size"
+        pointAltitude={0.012}
+        pointResolution={12}
+        onPointClick={(point)=>onSelect(point.id === selectedId ? null : point.id)}
+        onPointHover={(point)=>{document.body.style.cursor = point ? 'pointer' : 'default';}}
+
+        // Label on selected pin
+        labelsData={pointsData.filter(p=>p.id===selectedId)}
+        labelLat="lat"
+        labelLng="lng"
+        labelText={p=>p.city||p.title||''}
+        labelSize={1.2}
+        labelColor={()=>'#ffffff'}
+        labelAltitude={0.025}
+        labelResolution={2}
+      />
+    </div>
+  );
 }
 
 // ── Photo Detail ──
@@ -189,51 +185,32 @@ function PhotoDetail({photo,onClose,onLike,user}){
   </div>);
 }
 
-// ── Location Autocomplete (OpenStreetMap Nominatim) ──
+// ── Location Search ──
 function LocationSearch({onSelect,style}){
   const[query,setQuery]=useState("");const[results,setResults]=useState([]);const[loading,setLoading]=useState(false);const[selected,setSelected]=useState(null);
   const debounceRef=useRef(null);
-
   const search=useCallback((q)=>{
-    if(q.length<2){setResults([]);return;}
-    setLoading(true);
+    if(q.length<2){setResults([]);return;}setLoading(true);
     fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`,{headers:{"Accept-Language":"en"}})
-      .then(r=>r.json()).then(data=>{
-        setResults(data.map(d=>{
-          const city=d.address?.city||d.address?.town||d.address?.village||d.address?.hamlet||d.address?.municipality||d.address?.county||"";
-          const state=d.address?.state||"";
-          const country=d.address?.country||"";
-          return{display:d.display_name,lat:parseFloat(d.lat),lon:parseFloat(d.lon),city,state,country};
-        }));
-        setLoading(false);
-      }).catch(()=>setLoading(false));
+      .then(r=>r.json()).then(data=>{setResults(data.map(d=>{const city=d.address?.city||d.address?.town||d.address?.village||d.address?.hamlet||d.address?.municipality||d.address?.county||"";return{display:d.display_name,lat:parseFloat(d.lat),lon:parseFloat(d.lon),city,state:d.address?.state||"",country:d.address?.country||""};
+      }));setLoading(false);}).catch(()=>setLoading(false));
   },[]);
-
-  const handleChange=(e)=>{
-    const v=e.target.value;setQuery(v);setSelected(null);
-    if(debounceRef.current)clearTimeout(debounceRef.current);
-    debounceRef.current=setTimeout(()=>search(v),350);
-  };
-
-  const handleSelect=(r)=>{
-    setSelected(r);setQuery(r.display);setResults([]);
-    onSelect(r);
-  };
-
+  const handleChange=(e)=>{const v=e.target.value;setQuery(v);setSelected(null);if(debounceRef.current)clearTimeout(debounceRef.current);debounceRef.current=setTimeout(()=>search(v),350);};
+  const handleSelect=(r)=>{setSelected(r);setQuery(r.display);setResults([]);onSelect(r);};
   return(<div style={{position:"relative",marginBottom:14}}>
     <div style={{position:"relative"}}>
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5A8CA8" strokeWidth="2" style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)",pointerEvents:"none"}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
       <input value={query} onChange={handleChange} placeholder="Search a city or address..." style={{...style,paddingLeft:38}}/>
-      {loading&&<div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50)",fontSize:12,color:"#5A8CA8"}}>...</div>}
+      {loading&&<div style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",fontSize:12,color:"#5A8CA8"}}>...</div>}
     </div>
     {selected&&<div style={{marginTop:8,padding:"8px 12px",borderRadius:8,background:"rgba(42,166,212,0.08)",border:"1px solid rgba(42,166,212,0.2)",fontSize:12,color:"#2AA6D4",display:"flex",alignItems:"center",gap:6}}>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
-      {selected.city}{selected.state?`, ${selected.state}`:""}, {selected.country} <span style={{color:"#3A6080",marginLeft:"auto"}}>{selected.lat.toFixed(4)}, {selected.lon.toFixed(4)}</span>
+      {selected.city}{selected.state?`, ${selected.state}`:""}, {selected.country}
     </div>}
     {results.length>0&&!selected&&<div style={{position:"absolute",top:"100%",left:0,right:0,zIndex:10,background:"#0A1620",border:"1px solid #1A3040",borderRadius:10,marginTop:4,overflow:"hidden",boxShadow:"0 12px 40px rgba(0,0,0,0.4)",maxHeight:240,overflowY:"auto"}}>
       {results.map((r,i)=><div key={i} onClick={()=>handleSelect(r)} style={{padding:"10px 14px",cursor:"pointer",borderBottom:"1px solid #1A3040",fontSize:13,color:"#E0EEF4",display:"flex",alignItems:"flex-start",gap:8}} onMouseOver={e=>e.currentTarget.style.background="rgba(42,166,212,0.08)"} onMouseOut={e=>e.currentTarget.style.background="transparent"}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5A8CA8" strokeWidth="2" style={{marginTop:2,flexShrink:0}}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
-        <div style={{minWidth:0}}><div style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.display}</div></div>
+        <div style={{minWidth:0,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{r.display}</div>
       </div>)}
     </div>}
   </div>);
@@ -251,38 +228,20 @@ function UploadModal({onClose,onUpload,user}){
   const handleLocation=(loc)=>{setLocation(loc);setLat(loc.lat.toString());setLon(loc.lon.toString());setCity(loc.city||loc.state||"Unknown");setCountry(loc.country||"Unknown");};
   const[step,setStep]=useState(1);const[uploading,setUploading]=useState(false);const[success,setSuccess]=useState(false);const[error,setError]=useState(null);
   const fileRef=useRef(null);
-
   const handleFile=(f)=>{if(!f)return;setImgFile(f);setImgPreview(URL.createObjectURL(f));};
-
   const handleSubmit=async()=>{
     setUploading(true);setError(null);
     try{
       let image_url=null;
-      if(imgFile){
-        const ext=imgFile.name.split('.').pop();
-        const path=`${user.id}/${Date.now()}.${ext}`;
-        const{error:uploadErr}=await supabase.storage.from('photos').upload(path,imgFile);
-        if(uploadErr)throw uploadErr;
-        const{data}=supabase.storage.from('photos').getPublicUrl(path);
-        image_url=data.publicUrl;
-      }
-      const{error:insertErr}=await supabase.from('photos').insert({
-        user_id:user.id,title,lat:parseFloat(lat),lon:parseFloat(lon),city,country,
-        image_url,camera,lens:lens||null,film_type:filmType||null,
-        aperture:aperture||null,shutter_speed:shutter||null,iso:iso||null,
-        focal_length:focalLength||null,flash:"Off",white_balance:"Auto",
-        tags:tags.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean),
-        captured_at:new Date().toISOString()
-      });
+      if(imgFile){const ext=imgFile.name.split('.').pop();const path=`${user.id}/${Date.now()}.${ext}`;const{error:uploadErr}=await supabase.storage.from('photos').upload(path,imgFile);if(uploadErr)throw uploadErr;const{data}=supabase.storage.from('photos').getPublicUrl(path);image_url=data.publicUrl;}
+      const{error:insertErr}=await supabase.from('photos').insert({user_id:user.id,title,lat:parseFloat(lat),lon:parseFloat(lon),city,country,image_url,camera,lens:lens||null,film_type:filmType||null,aperture:aperture||null,shutter_speed:shutter||null,iso:iso||null,focal_length:focalLength||null,flash:"Off",white_balance:"Auto",tags:tags.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean),captured_at:new Date().toISOString()});
       if(insertErr)throw insertErr;
       setSuccess(true);onUpload();setTimeout(onClose,1500);
     }catch(e){setError(e.message);}
     setUploading(false);
   };
-
   const iS={background:"#0D1F2D",border:"1px solid #1A3040",borderRadius:10,padding:"11px 14px",color:"#E0EEF4",fontSize:14,outline:"none",width:"100%",fontFamily:"'DM Sans',sans-serif"};
   const lS={fontSize:11,color:"#5A8CA8",fontWeight:600,textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:6,display:"block"};
-
   return(<div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(0,10,20,0.6)",backdropFilter:"blur(20px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
     <div style={{width:560,maxHeight:"92vh",background:"#0A1620",borderRadius:24,border:"1px solid #1A3040",overflow:"hidden",boxShadow:"0 40px 100px rgba(0,0,0,0.4)",display:"flex",flexDirection:"column"}}>
       <div style={{padding:"24px 28px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0}}>
@@ -306,7 +265,7 @@ function UploadModal({onClose,onUpload,user}){
         :(<div>
           <label><span style={lS}>Camera *</span><input value={camera} onChange={e=>setCamera(e.target.value)} placeholder="Canon AE-1" style={{...iS,marginBottom:14}}/></label>
           <label><span style={lS}>Lens</span><input value={lens} onChange={e=>setLens(e.target.value)} placeholder="FD 50mm f/1.4" style={{...iS,marginBottom:14}}/></label>
-          <label><span style={lS}>Film Stock (blank = digital)</span><input value={filmType} onChange={e=>setFilmType(e.target.value)} placeholder="Kodak Portra 400" style={{...iS,marginBottom:14}}/></label>
+          <label><span style={lS}>Film Stock</span><input value={filmType} onChange={e=>setFilmType(e.target.value)} placeholder="Kodak Portra 400" style={{...iS,marginBottom:14}}/></label>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}><label><span style={lS}>Aperture</span><input value={aperture} onChange={e=>setAperture(e.target.value)} placeholder="ƒ/2.8" style={iS}/></label><label><span style={lS}>Shutter</span><input value={shutter} onChange={e=>setShutter(e.target.value)} placeholder="1/125s" style={iS}/></label></div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12,marginBottom:14}}><label><span style={lS}>ISO</span><input value={iso} onChange={e=>setIso(e.target.value)} placeholder="400" style={iS}/></label><label><span style={lS}>Focal Length</span><input value={focalLength} onChange={e=>setFocalLength(e.target.value)} placeholder="50mm" style={iS}/></label></div>
           <label><span style={lS}>Tags</span><input value={tags} onChange={e=>setTags(e.target.value)} placeholder="landscape, film, travel" style={{...iS,marginBottom:20}}/></label>
@@ -334,35 +293,29 @@ function GlobeNav({onNavigate}){
   </div>);
 }
 
-// ── Main ──
+// ── Main Export ──
 export default function PhotoGlobe({onNavigate}){
   const[photos,setPhotos]=useState([]);const[selectedId,setSelectedId]=useState(null);
   const[showUpload,setShowUpload]=useState(false);const[showAuth,setShowAuth]=useState(false);
   const[filter,setFilter]=useState("all");const[search,setSearch]=useState("");
-  const[rotation,setRotation]=useState({lat:20,lon:-20});const[globeScale,setGlobeScale]=useState(1);const[sidebar,setSidebar]=useState(true);
+  const[sidebar,setSidebar]=useState(true);
   const[user,setUser]=useState(null);const[userLikes,setUserLikes]=useState(new Set());
 
-  // Auth
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{if(session)setUser(session.user);});
     const{data:{subscription}}=supabase.auth.onAuthStateChange((_,session)=>{setUser(session?.user||null);});
     return()=>subscription.unsubscribe();
   },[]);
 
-  // Load photos
   const loadPhotos=useCallback(async()=>{
     const{data,error}=await supabase.from('photos_with_likes').select('*').order('created_at',{ascending:false});
     if(!error&&data)setPhotos(data);
   },[]);
-
   useEffect(()=>{loadPhotos();},[loadPhotos]);
 
-  // Load user likes
   useEffect(()=>{
     if(!user)return;
-    supabase.from('likes').select('photo_id').eq('user_id',user.id).then(({data})=>{
-      if(data)setUserLikes(new Set(data.map(l=>l.photo_id)));
-    });
+    supabase.from('likes').select('photo_id').eq('user_id',user.id).then(({data})=>{if(data)setUserLikes(new Set(data.map(l=>l.photo_id)));});
   },[user,photos]);
 
   const photosWithLikes=useMemo(()=>photos.map(p=>({...p,user_liked:userLikes.has(p.id)})),[photos,userLikes]);
@@ -370,27 +323,26 @@ export default function PhotoGlobe({onNavigate}){
   const handleLike=async(photoId)=>{
     if(!user){setShowAuth(true);return;}
     const liked=userLikes.has(photoId);
-    if(liked){
-      await supabase.from('likes').delete().eq('user_id',user.id).eq('photo_id',photoId);
-      setUserLikes(prev=>{const n=new Set(prev);n.delete(photoId);return n;});
-    }else{
-      await supabase.from('likes').insert({user_id:user.id,photo_id:photoId});
-      setUserLikes(prev=>new Set(prev).add(photoId));
-    }
+    if(liked){await supabase.from('likes').delete().eq('user_id',user.id).eq('photo_id',photoId);setUserLikes(prev=>{const n=new Set(prev);n.delete(photoId);return n;});}
+    else{await supabase.from('likes').insert({user_id:user.id,photo_id:photoId});setUserLikes(prev=>new Set(prev).add(photoId));}
     loadPhotos();
   };
 
-  const handleUploadClick=()=>{if(!user){setShowAuth(true);}else{setShowUpload(true);}};
+  const filtered=useMemo(()=>{
+    let r=photosWithLikes;
+    if(filter!=="all")r=r.filter(p=>p.tags?.includes(filter));
+    if(search){const q=search.toLowerCase();r=r.filter(p=>p.title?.toLowerCase().includes(q)||p.city?.toLowerCase().includes(q)||p.country?.toLowerCase().includes(q)||p.camera?.toLowerCase().includes(q));}
+    return r;
+  },[photosWithLikes,filter,search]);
 
-  const sel=photosWithLikes.find(p=>p.id===selectedId);
-  const filtered=useMemo(()=>{let r=photosWithLikes;if(filter!=="all")r=r.filter(p=>p.tags?.includes(filter));if(search){const q=search.toLowerCase();r=r.filter(p=>p.title?.toLowerCase().includes(q)||p.city?.toLowerCase().includes(q)||p.country?.toLowerCase().includes(q)||p.camera?.toLowerCase().includes(q));}return r;},[photosWithLikes,filter,search]);
   const allTags=useMemo(()=>[...new Set(photos.flatMap(p=>p.tags||[]))].sort(),[photos]);
   const stats=useMemo(()=>({p:photos.length,c:new Set(photos.map(p=>p.country)).size,cam:new Set(photos.map(p=>p.camera)).size}),[photos]);
-  // No auto-rotation - just open the detail panel and highlight the pin
+  const sel=photosWithLikes.find(p=>p.id===selectedId);
 
   return(<div style={{width:"100vw",height:"100vh",background:"#111A24",fontFamily:"'DM Sans',system-ui,sans-serif",display:"flex",overflow:"hidden",position:"relative",color:"#E0EEF4"}}>
-    <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Mono:wght@400;700&display=swap');*{box-sizing:border-box;margin:0;padding:0}@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}@keyframes spin{to{transform:rotate(360deg)}}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0A1620}::-webkit-scrollbar-thumb{background:#1A3040;border-radius:3px}input::placeholder{color:#3A6080}input:focus{border-color:rgba(42,166,212,0.5)!important}`}</style>
+    <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Mono:wght@400;700&display=swap');*{box-sizing:border-box;margin:0;padding:0}@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0A1620}::-webkit-scrollbar-thumb{background:#1A3040;border-radius:3px}input::placeholder{color:#3A6080}input:focus{border-color:rgba(42,166,212,0.5)!important}`}</style>
 
+    {/* Sidebar */}
     <div style={{width:sidebar?340:0,flexShrink:0,background:"#0A1620",borderRight:sidebar?"1px solid #1A3040":"none",display:"flex",flexDirection:"column",transition:"width 0.3s",overflow:"hidden",zIndex:50}}>
       <div style={{padding:"22px 20px 14px",flexShrink:0}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:18}}>
@@ -406,17 +358,18 @@ export default function PhotoGlobe({onNavigate}){
         <div style={{display:"flex",flexWrap:"wrap",gap:5}}><button onClick={()=>setFilter("all")} style={{padding:"4px 10px",borderRadius:20,fontSize:11,fontWeight:600,background:filter==="all"?"rgba(42,166,212,0.15)":"#0D1F2D",color:filter==="all"?"#2AA6D4":"#3A6080",border:filter==="all"?"1px solid rgba(42,166,212,0.3)":"1px solid #1A3040",cursor:"pointer"}}>All</button>{allTags.slice(0,8).map(t=><button key={t} onClick={()=>setFilter(filter===t?"all":t)} style={{padding:"4px 10px",borderRadius:20,fontSize:11,fontWeight:600,background:filter===t?"rgba(42,166,212,0.15)":"#0D1F2D",color:filter===t?"#2AA6D4":"#3A6080",border:filter===t?"1px solid rgba(42,166,212,0.3)":"1px solid #1A3040",cursor:"pointer"}}>#{t}</button>)}</div>
       </div>
       <div style={{flex:1,overflowY:"auto",padding:"0 6px 16px"}}>{filtered.length===0&&photos.length===0?<div style={{textAlign:"center",padding:"40px 20px",color:"#3A6080"}}><div style={{fontSize:32,marginBottom:12}}>🌍</div><div style={{fontSize:14,marginBottom:4}}>No photos yet</div><div style={{fontSize:12}}>Be the first to upload!</div></div>:filtered.map(p=><PhotoListItem key={p.id} photo={p} selected={selectedId===p.id} onClick={()=>setSelectedId(selectedId===p.id?null:p.id)}/>)}</div>
-      <div style={{padding:"14px 20px",flexShrink:0,borderTop:"1px solid #1A3040"}}><button onClick={handleUploadClick} style={{width:"100%",padding:"13px",borderRadius:12,background:"linear-gradient(135deg,#FF6B35,#ff8c5a)",color:"#fff",border:"none",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 4px 20px rgba(255,107,53,0.25)"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>Upload Photo</button></div>
+      <div style={{padding:"14px 20px",flexShrink:0,borderTop:"1px solid #1A3040"}}><button onClick={()=>{if(!user){setShowAuth(true);}else{setShowUpload(true);}}} style={{width:"100%",padding:"13px",borderRadius:12,background:"linear-gradient(135deg,#FF6B35,#ff8c5a)",color:"#fff",border:"none",fontSize:14,fontWeight:700,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,boxShadow:"0 4px 20px rgba(255,107,53,0.25)"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M12 5v14M5 12h14"/></svg>Upload Photo</button></div>
     </div>
 
+    {/* Globe area */}
     <div style={{flex:1,position:"relative",overflow:"hidden"}}>
       <GlobeNav onNavigate={onNavigate}/>
       <button onClick={()=>setSidebar(!sidebar)} style={{position:"absolute",top:60,left:20,zIndex:40,width:40,height:40,borderRadius:10,background:"rgba(10,22,32,0.8)",border:"1px solid #1A3040",color:"#5A8CA8",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(10px)"}}><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{sidebar?<path d="M15 18l-6-6 6-6"/>:<path d="M9 18l6-6-6-6"/>}</svg></button>
-      <div style={{position:"absolute",bottom:24,right:24,zIndex:40,display:"flex",flexDirection:"column",gap:6}}>{[{label:"+",fn:()=>setGlobeScale(s=>Math.min(4,s*1.3))},{label:"−",fn:()=>setGlobeScale(s=>Math.max(0.5,s/1.3))},{label:"⌂",fn:()=>{setGlobeScale(1);setRotation({lat:20,lon:-20});}}].map((b,i)=>(<button key={i} onClick={b.fn} style={{width:40,height:40,borderRadius:10,background:"rgba(10,22,32,0.8)",border:"1px solid #1A3040",color:"#5A8CA8",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:20,backdropFilter:"blur(10px)"}} onMouseOver={e=>e.currentTarget.style.background="rgba(42,166,212,0.15)"} onMouseOut={e=>e.currentTarget.style.background="rgba(10,22,32,0.8)"}>{b.label}</button>))}</div>
-      <div style={{position:"absolute",bottom:24,left:20,zIndex:40,display:"flex",gap:16,padding:"10px 16px",borderRadius:12,background:"rgba(10,22,32,0.8)",border:"1px solid #1A3040",backdropFilter:"blur(10px)",fontSize:11,color:"#5A8CA8"}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:8,height:8,borderRadius:"50%",background:"#FF6B35",border:"2px solid #fff"}}/>Photo</div><div style={{color:"#3A6080"}}>Drag to rotate</div></div>
-      <GlobeCanvas photos={filtered} selectedId={selectedId} onSelect={id=>setSelectedId(selectedId===id?null:id)} rotation={rotation} onRotate={setRotation} globeScale={globeScale} onScaleChange={setGlobeScale}/>
+      <div style={{position:"absolute",bottom:24,left:20,zIndex:40,display:"flex",gap:16,padding:"10px 16px",borderRadius:12,background:"rgba(10,22,32,0.8)",border:"1px solid #1A3040",backdropFilter:"blur(10px)",fontSize:11,color:"#5A8CA8"}}><div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:8,height:8,borderRadius:"50%",background:"#FF6B35",border:"2px solid #fff"}}/>Photo</div><div style={{color:"#3A6080"}}>Drag · Scroll to zoom</div></div>
+      <GlobeCanvas photos={filtered} selectedId={selectedId} onSelect={id=>setSelectedId(selectedId===id?null:id)}/>
       {sel&&<PhotoDetail photo={sel} onClose={()=>setSelectedId(null)} onLike={handleLike} user={user}/>}
     </div>
+
     {showUpload&&user&&<UploadModal onClose={()=>setShowUpload(false)} onUpload={loadPhotos} user={user}/>}
     {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={()=>{loadPhotos();}}/>}
   </div>);
