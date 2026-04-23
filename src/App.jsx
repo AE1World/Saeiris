@@ -121,45 +121,179 @@ const SERVICES=[
     ]},
 ];
 
+function TitleDragger({debug}){
+  const[pos,setPos]=useState({left:33.94,top:37.72});
+  const dragging=useRef(false);
+  const startRef=useRef(null);
+
+  const onMouseDown=(e)=>{
+    if(!debug)return;
+    e.preventDefault();
+    dragging.current=true;
+    startRef.current={x:e.clientX,y:e.clientY,left:pos.left,top:pos.top};
+  };
+  useEffect(()=>{
+    if(!debug)return;
+    const onMove=(e)=>{
+      if(!dragging.current||!startRef.current)return;
+      const dx=(e.clientX-startRef.current.x)/window.innerWidth*100;
+      const dy=(e.clientY-startRef.current.y)/window.innerHeight*100;
+      setPos({left:Math.round((startRef.current.left+dx)*100)/100,top:Math.round((startRef.current.top+dy)*100)/100});
+    };
+    const onUp=()=>{
+      if(dragging.current){
+        dragging.current=false;
+        navigator.clipboard.writeText(`left:${pos.left}%, top:${pos.top}%`);
+        alert(`Position copied!\nleft: ${pos.left}%\ntop: ${pos.top}%`);
+      }
+    };
+    window.addEventListener('mousemove',onMove);
+    window.addEventListener('mouseup',onUp);
+    return()=>{window.removeEventListener('mousemove',onMove);window.removeEventListener('mouseup',onUp);};
+  },[debug,pos]);
+
+  return(
+    <div
+      onMouseDown={onMouseDown}
+      style={{position:"absolute",top:pos.top+"%",left:pos.left+"%",transform:"translateY(-50%)",textAlign:"center",zIndex:2,pointerEvents:debug?"auto":"none",cursor:debug?"move":"default",border:debug?"2px dashed #FF6B35":"none",padding:debug?"8px":"0",userSelect:"none"}}>
+      {debug&&<div style={{fontSize:10,background:"#FF6B35",color:"#fff",padding:"2px 6px",marginBottom:4,borderRadius:3,fontFamily:"sans-serif"}}>Drag me · left:{pos.left}% top:{pos.top}%</div>}
+      <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 20px rgba(248,244,240,1), 0 0 40px rgba(248,244,240,0.8)"}}>
+        Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
+      </h2>
+    </div>
+  );
+}
+
 function HowItWorksSection(){
   const[activeService,setActiveService]=useState(null);
   const[hoveredIdx,setHoveredIdx]=useState(null);
-  const hotspots=[
-    {left:-5.51,top:0.12,width:34.83,height:76.33,rotation:-13.5,serviceIdx:0},
-    {left:40.30,top:18.10,width:26.83,height:22.02,rotation:10.5,serviceIdx:1},
-    {left:69.24,top:46.23,width:13.49,height:40.56,rotation:27.5,serviceIdx:2},
-  ];
+
+  // ── SET debug=true TO CALIBRATE HOTSPOTS ──
+  const debug=false;
+
+  const LABELS=['Map','Boarding Pass','Sunglasses'];
+  const[hotspots,setHotspots]=useState([
+    {left:-1.45,top:47.31,width:40.76,height:64.71,rotation:-13,serviceIdx:0},
+    {left:59.19,top:15.82,width:32.3,height:23.58,rotation:1,serviceIdx:1},
+    {left:67.15,top:68.24,width:20.44,height:14.77,rotation:16,serviceIdx:2},
+  ]);
+
+  const dragging=useRef(null);
+  const sectionRef=useRef(null);
+
+  const startDrag=(i,mode,e)=>{
+    if(!debug)return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragging.current={i,mode,startX:e.clientX,startY:e.clientY,orig:{...hotspots[i]}};
+  };
+
+  const onMouseMove=useCallback((e)=>{
+    if(!debug||!dragging.current)return;
+    const{i,mode,startX,startY,orig}=dragging.current;
+    const el=sectionRef.current;if(!el)return;
+    const r=el.getBoundingClientRect();
+    const dx=(e.clientX-startX)/r.width*100;
+    const dy=(e.clientY-startY)/r.height*100;
+    setHotspots(prev=>prev.map((h,idx)=>{
+      if(idx!==i)return h;
+      const round=v=>Math.round(v*100)/100;
+      if(mode==='move') return{...h,left:round(orig.left+dx),top:round(orig.top+dy)};
+      if(mode==='resize-r') return{...h,width:Math.max(2,round(orig.width+dx))};
+      if(mode==='resize-l') return{...h,left:round(orig.left+dx),width:Math.max(2,round(orig.width-dx))};
+      if(mode==='resize-b') return{...h,height:Math.max(2,round(orig.height+dy))};
+      if(mode==='resize-t') return{...h,top:round(orig.top+dy),height:Math.max(2,round(orig.height-dy))};
+      if(mode==='resize-br') return{...h,width:Math.max(2,round(orig.width+dx)),height:Math.max(2,round(orig.height+dy))};
+      if(mode==='rotate'){
+        // Calculate rotation from center of element
+        const cx=r.left+(orig.left+orig.width/2)/100*r.width;
+        const cy=r.top+(orig.top+orig.height/2)/100*r.height;
+        const angle=Math.atan2(e.clientY-cy,e.clientX-cx)*180/Math.PI;
+        return{...h,rotation:Math.round(angle)};
+      }
+      return h;
+    }));
+  },[debug]);
+
+  const onMouseUp=useCallback(()=>{dragging.current=null;},[]);
+
+  useEffect(()=>{
+    if(!debug)return;
+    window.addEventListener('mousemove',onMouseMove);
+    window.addEventListener('mouseup',onMouseUp);
+    return()=>{window.removeEventListener('mousemove',onMouseMove);window.removeEventListener('mouseup',onMouseUp);};
+  },[debug,onMouseMove,onMouseUp]);
+
+  const copyPositions=()=>{
+    const txt=hotspots.map((h,i)=>`{left:${h.left},top:${h.top},width:${h.width},height:${h.height},rotation:${h.rotation},serviceIdx:${h.serviceIdx}}`).join(',\n    ');
+    navigator.clipboard.writeText(txt);
+    alert('Copied!\n\n'+txt);
+  };
 
   return(
-    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
-      {/* Background image — full opacity */}
+    <section ref={sectionRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}/>
 
-      {/* Title */}
-      <div style={{position:"absolute",top:"50%",left:"33.94%",transform:"translateY(-50%)",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
-        <h2 style={{fontSize:"clamp(30px,4.5vw,52px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:0,textShadow:"0 2px 20px rgba(248,244,240,1), 0 0 40px rgba(248,244,240,0.8)"}}>
-          Not Just a Trip.<br/><span style={{fontStyle:"italic",fontWeight:400,color:"#C8956C"}}>A Memory</span> You Can Hold.
-        </h2>
-      </div>
+      {/* Title — draggable in debug mode */}
+      <TitleDragger debug={debug}/>
 
       {/* Subtitle hint */}
       <div style={{position:"absolute",top:"2.34%",left:"41.68%",textAlign:"center",zIndex:2,pointerEvents:"none"}}>
         <p style={{fontSize:13,color:"#8A7A68",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.06em",textShadow:"0 1px 8px rgba(248,244,240,0.9)"}}>Click the objects to learn more</p>
       </div>
 
-      {/* Interactive hotspots */}
+      {/* Debug copy button */}
+      {debug&&<button onClick={copyPositions} style={{position:"absolute",top:10,right:10,zIndex:300,padding:"8px 16px",background:"#FF6B35",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700}}>Copy Positions</button>}
+
+      {/* Hotspots */}
       {hotspots.map((h,i)=>(
         <div key={i}
-          onClick={()=>setActiveService(SERVICES[h.serviceIdx])}
-          onMouseEnter={()=>setHoveredIdx(i)}
-          onMouseLeave={()=>setHoveredIdx(null)}
-          style={{position:"absolute",left:h.left+"%",top:h.top+"%",width:h.width+"%",height:h.height+"%",transform:`rotate(${h.rotation}deg)`,zIndex:1,cursor:"pointer",borderRadius:6,transition:"all 0.4s ease",boxShadow:hoveredIdx===i?"0 0 30px rgba(200,149,108,0.4), inset 0 0 30px rgba(200,149,108,0.08)":"none",background:hoveredIdx===i?"rgba(200,149,108,0.08)":"transparent",border:hoveredIdx===i?"1px solid rgba(200,149,108,0.25)":"1px solid transparent"}}>
-          {/* Service label on hover */}
-          {hoveredIdx===i&&<div style={{position:"absolute",bottom:"105%",left:"50%",transform:"translateX(-50%) rotate("+(-h.rotation)+"deg)",whiteSpace:"nowrap",padding:"6px 14px",background:"rgba(42,36,32,0.85)",backdropFilter:"blur(8px)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
+          onMouseDown={debug?(e)=>startDrag(i,'move',e):undefined}
+          onClick={!debug?()=>setActiveService(SERVICES[h.serviceIdx]):undefined}
+          onMouseEnter={!debug?()=>setHoveredIdx(i):undefined}
+          onMouseLeave={!debug?()=>setHoveredIdx(null):undefined}
+          style={{
+            position:"absolute",left:h.left+"%",top:h.top+"%",
+            width:h.width+"%",height:h.height+"%",
+            transform:`rotate(${h.rotation}deg)`,
+            zIndex:debug?50:1,
+            cursor:debug?"move":"pointer",
+            borderRadius:6,
+            border:debug?"2px solid #FF6B35":hoveredIdx===i?"1px solid rgba(200,149,108,0.25)":"1px solid transparent",
+            background:debug?"rgba(255,107,53,0.15)":hoveredIdx===i?"rgba(200,149,108,0.08)":"transparent",
+            boxShadow:!debug&&hoveredIdx===i?"0 0 30px rgba(200,149,108,0.4), inset 0 0 30px rgba(200,149,108,0.08)":"none",
+            transition:debug?"none":"all 0.4s ease",
+          }}>
+
+          {/* Debug label */}
+          {debug&&<div style={{position:"absolute",top:2,left:2,background:"#FF6B35",color:"#fff",fontSize:9,padding:"2px 5px",fontWeight:700,borderRadius:3,pointerEvents:"none",whiteSpace:"nowrap"}}>
+            {i+1} {LABELS[i]} | {h.left}%,{h.top}% {h.width}x{h.height} rot:{h.rotation}°
+          </div>}
+
+          {/* Resize handles — only in debug */}
+          {debug&&<>
+            {/* Right */}
+            <div onMouseDown={(e)=>{e.stopPropagation();startDrag(i,'resize-r',e);}} style={{position:"absolute",right:-5,top:"10%",width:10,height:"80%",background:"#FF6B35",cursor:"ew-resize",borderRadius:3,zIndex:10}}/>
+            {/* Left */}
+            <div onMouseDown={(e)=>{e.stopPropagation();startDrag(i,'resize-l',e);}} style={{position:"absolute",left:-5,top:"10%",width:10,height:"80%",background:"#FF6B35",cursor:"ew-resize",borderRadius:3,zIndex:10}}/>
+            {/* Bottom */}
+            <div onMouseDown={(e)=>{e.stopPropagation();startDrag(i,'resize-b',e);}} style={{position:"absolute",bottom:-5,left:"10%",height:10,width:"80%",background:"#FF6B35",cursor:"ns-resize",borderRadius:3,zIndex:10}}/>
+            {/* Top */}
+            <div onMouseDown={(e)=>{e.stopPropagation();startDrag(i,'resize-t',e);}} style={{position:"absolute",top:-5,left:"10%",height:10,width:"80%",background:"#FF6B35",cursor:"ns-resize",borderRadius:3,zIndex:10}}/>
+            {/* Bottom-right corner — stretch both */}
+            <div onMouseDown={(e)=>{e.stopPropagation();startDrag(i,'resize-br',e);}} style={{position:"absolute",bottom:-7,right:-7,width:14,height:14,background:"#fff",border:"2px solid #FF6B35",cursor:"nwse-resize",borderRadius:3,zIndex:10}}/>
+            {/* Rotate handle — top center */}
+            <div onMouseDown={(e)=>{e.stopPropagation();startDrag(i,'rotate',e);}} style={{position:"absolute",top:-24,left:"50%",transform:"translateX(-50%)",width:14,height:14,background:"#fff",border:"2px solid #FF6B35",cursor:"crosshair",borderRadius:"50%",zIndex:10}}/>
+            <div style={{position:"absolute",top:-16,left:"calc(50% - 1px)",width:2,height:12,background:"#FF6B35",pointerEvents:"none"}}/>
+          </>}
+
+          {/* Hover label — only when not in debug */}
+          {!debug&&hoveredIdx===i&&<div style={{position:"absolute",bottom:"105%",left:"50%",transform:"translateX(-50%) rotate("+(-h.rotation)+"deg)",whiteSpace:"nowrap",padding:"6px 14px",background:"rgba(42,36,32,0.85)",backdropFilter:"blur(8px)",borderRadius:6,boxShadow:"0 4px 16px rgba(0,0,0,0.15)"}}>
             <span style={{fontSize:12,fontWeight:600,color:"#F5F0EB",fontFamily:"'Cormorant Garamond',serif",letterSpacing:"0.08em"}}>{SERVICES[h.serviceIdx].title}</span>
           </div>}
         </div>
       ))}
+
       <ServiceModal service={activeService} onClose={()=>setActiveService(null)}/>
     </section>
   );
