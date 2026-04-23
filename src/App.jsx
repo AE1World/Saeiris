@@ -169,12 +169,12 @@ function HowItWorksSection(){
 // SECTION 3: TRAVEL GUIDES — picture frames on a wall
 // ══════════════════════════════════════════════════════════════
 const GUIDES=[
-  {city:"Madrid",country:"Spain",img:"https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=500&q=80",tagline:"Tapas, plazas & golden light",budget:"$2,800 – $4,200",duration:"7 nights",highlight:"Rooftop sunset at Círculo de Bellas Artes"},
-  {city:"Tuscany",country:"Italy",img:"https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=500&q=80",tagline:"Rolling hills & Chianti roads",budget:"$3,200 – $5,000",duration:"8 nights",highlight:"Private vineyard tasting in Montalcino"},
-  {city:"Kauai",country:"Hawaii",img:"https://images.unsplash.com/photo-1505852679233-d9fd70aff56d?w=500&q=80",tagline:"The Garden Isle, untouched",budget:"$3,500 – $5,500",duration:"6 nights",highlight:"Nā Pali Coast helicopter tour at sunrise"},
-  {city:"Hvar",country:"Croatia",img:"https://images.unsplash.com/photo-1580502304784-8985b7eb7260?w=500&q=80",tagline:"Lavender, stone & Adriatic blue",budget:"$2,400 – $3,800",duration:"5 nights",highlight:"Sunset kayak to the Pakleni Islands"},
-  {city:"Seattle",country:"USA",img:"https://images.unsplash.com/photo-1438401171849-74ac270044ee?w=500&q=80",tagline:"Coffee, rain & emerald views",budget:"$1,800 – $3,000",duration:"4 nights",highlight:"Ferry ride to Bainbridge Island"},
-  {city:"Rome",country:"Italy",img:"https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=500&q=80",tagline:"Eternal city, timeless film",budget:"$2,600 – $4,400",duration:"6 nights",highlight:"Private twilight Colosseum tour"},
+  {city:"Madrid",country:"Spain",img:"/Madrid.png",tagline:"Tapas, plazas & golden light",budget:"$2,800 – $4,200",duration:"7 nights",highlight:"Rooftop sunset at Círculo de Bellas Artes"},
+  {city:"Tuscany",country:"Italy",img:"/Tuscany.png",tagline:"Rolling hills & Chianti roads",budget:"$3,200 – $5,000",duration:"8 nights",highlight:"Private vineyard tasting in Montalcino"},
+  {city:"Kauai",country:"Hawaii",img:"/Kauai.png",tagline:"The Garden Isle, untouched",budget:"$3,500 – $5,500",duration:"6 nights",highlight:"Nā Pali Coast helicopter tour at sunrise"},
+  {city:"Hvar",country:"Croatia",img:"/Hvar.png",tagline:"Lavender, stone & Adriatic blue",budget:"$2,400 – $3,800",duration:"5 nights",highlight:"Sunset kayak to the Pakleni Islands"},
+  {city:"Seattle",country:"USA",img:"/Seattle.png",tagline:"Coffee, rain & emerald views",budget:"$1,800 – $3,000",duration:"4 nights",highlight:"Ferry ride to Bainbridge Island"},
+  {city:"Rome",country:"Italy",img:"/Rome.png",tagline:"Eternal city, timeless film",budget:"$2,600 – $4,400",duration:"6 nights",highlight:"Private twilight Colosseum tour"},
 ];
 
 function GuideModal({guide,onClose}){
@@ -218,32 +218,91 @@ function GuideModal({guide,onClose}){
 
 function TravelGuidesSection(){
   const[selected,setSelected]=useState(null);
-  const frames=[
-    {left:30.77,top:4.94,width:11.02,height:31.22,...GUIDES[0]},
-    {left:45.28,top:5.05,width:12.43,height:31.22,...GUIDES[1]},
-    {left:61.47,top:4.94,width:11.38,height:31.33,...GUIDES[2]},
-    {left:30.82,top:42.14,width:11.02,height:33.49,...GUIDES[3]},
-    {left:45.33,top:42.25,width:12.32,height:33.49,...GUIDES[4]},
-    {left:61.47,top:42.25,width:11.38,height:33.49,...GUIDES[5]},
-  ];
+  // Set debug=true to show draggable orange boxes for calibrating frame positions
+  const debug=false;
+  const[positions,setPositions]=useState([
+    {left:33.07,top:8.67,width:10.16,height:30.24},
+    {left:45.66,top:8.6,width:10.22,height:30.36},
+    {left:58.44,top:8.79,width:10.1,height:30.12},
+    {left:33.11,top:43.99,width:10.22,height:29.87},
+    {left:45.66,top:43.99,width:10.27,height:29.87},
+    {left:58.45,top:43.87,width:10.22,height:30.12},
+  ]);
+  const dragging=useRef(null);
+  const containerRef=useRef(null);
+
+  const onMouseDown=(i,e,mode='move')=>{
+    if(!debug)return;
+    e.preventDefault();
+    e.stopPropagation();
+    dragging.current={i,mode,startX:e.clientX,startY:e.clientY,orig:{...positions[i]}};
+  };
+  const onMouseMove=useCallback((e)=>{
+    if(!debug||!dragging.current)return;
+    const{i,mode,startX,startY,orig}=dragging.current;
+    const el=containerRef.current;if(!el)return;
+    const r=el.getBoundingClientRect();
+    const dx=(e.clientX-startX)/r.width*100;
+    const dy=(e.clientY-startY)/r.height*100;
+    setPositions(prev=>prev.map((p,idx)=>{
+      if(idx!==i)return p;
+      if(mode==='move') return{...p,left:Math.round((orig.left+dx)*100)/100,top:Math.round((orig.top+dy)*100)/100};
+      if(mode==='resize-br') return{...p,width:Math.max(1,Math.round((orig.width+dx)*100)/100),height:Math.max(1,Math.round((orig.height+dy)*100)/100)};
+      if(mode==='resize-r') return{...p,width:Math.max(1,Math.round((orig.width+dx)*100)/100)};
+      if(mode==='resize-b') return{...p,height:Math.max(1,Math.round((orig.height+dy)*100)/100)};
+      if(mode==='resize-l') return{...p,left:Math.round((orig.left+dx)*100)/100,width:Math.max(1,Math.round((orig.width-dx)*100)/100)};
+      if(mode==='resize-t') return{...p,top:Math.round((orig.top+dy)*100)/100,height:Math.max(1,Math.round((orig.height-dy)*100)/100)};
+      return p;
+    }));
+  },[debug]);
+  const onMouseUp=useCallback(()=>{dragging.current=null;},[]);
+
+  useEffect(()=>{
+    if(!debug)return;
+    window.addEventListener("mousemove",onMouseMove);
+    window.addEventListener("mouseup",onMouseUp);
+    return()=>{window.removeEventListener("mousemove",onMouseMove);window.removeEventListener("mouseup",onMouseUp);};
+  },[debug,onMouseMove,onMouseUp]);
+
+  const frames=positions.map((p,i)=>({...p,...GUIDES[i]}));
+
   return(
-    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section ref={containerRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
       <img src="/guides-wall.png" alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",pointerEvents:"none"}}/>
-      {/* Title — right of frames, top-aligned with Kauai frame, left-aligned text */}
+      {/* Title */}
       <div style={{position:"absolute",left:"77.77%",top:"3.45%",textAlign:"left",zIndex:2}}>
         <div style={{fontSize:"clamp(9px,0.85vw,12px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Explore</div>
         <h2 style={{fontSize:"clamp(20px,2.5vw,34px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",margin:0,lineHeight:1.15,textShadow:"0 1px 12px rgba(255,255,255,0.8)"}}>
           Travel<br/>Guide<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Showcase</span>
         </h2>
       </div>
+
+      {/* Debug: copy positions button */}
+      {debug&&<button onClick={()=>{const txt=positions.map((p,i)=>`Frame ${i+1}: left=${p.left}%, top=${p.top}%, width=${p.width}%, height=${p.height}%`).join('\n');navigator.clipboard.writeText(txt);alert('Positions copied!\n\n'+txt);}} style={{position:"absolute",top:10,right:10,zIndex:200,padding:"8px 16px",background:"#FF6B35",color:"#fff",border:"none",borderRadius:8,cursor:"pointer",fontSize:12,fontWeight:700}}>Copy Positions</button>}
+
       {/* Photos positioned over frames */}
       {frames.map((f,i)=>(
-        <div key={i} style={{position:"absolute",left:f.left+"%",top:f.top+"%",width:f.width+"%",height:f.height+"%",zIndex:1}}>
-          <div onClick={()=>setSelected(f)} style={{width:"100%",height:"100%",overflow:"hidden",cursor:"pointer"}}>
+        <div key={i}
+          onMouseDown={(e)=>onMouseDown(i,e)}
+          style={{position:"absolute",left:f.left+"%",top:f.top+"%",width:f.width+"%",height:f.height+"%",zIndex:1,cursor:debug?"move":"pointer",border:debug?"2px solid #FF6B35":"none",background:debug?"rgba(255,107,53,0.15)":"transparent"}}>
+          {debug&&<>
+            <div style={{position:"absolute",top:0,left:0,background:"#FF6B35",color:"#fff",fontSize:9,padding:"2px 4px",fontWeight:700,zIndex:10,pointerEvents:"none"}}>{i+1}: {f.left}%,{f.top}% | {f.width}x{f.height}</div>
+            {/* Right handle */}
+            <div onMouseDown={(e)=>onMouseDown(i,e,'resize-r')} style={{position:"absolute",right:-4,top:"10%",width:8,height:"80%",background:"#FF6B35",cursor:"ew-resize",zIndex:20,borderRadius:2}}/>
+            {/* Left handle */}
+            <div onMouseDown={(e)=>onMouseDown(i,e,'resize-l')} style={{position:"absolute",left:-4,top:"10%",width:8,height:"80%",background:"#FF6B35",cursor:"ew-resize",zIndex:20,borderRadius:2}}/>
+            {/* Bottom handle */}
+            <div onMouseDown={(e)=>onMouseDown(i,e,'resize-b')} style={{position:"absolute",bottom:-4,left:"10%",height:8,width:"80%",background:"#FF6B35",cursor:"ns-resize",zIndex:20,borderRadius:2}}/>
+            {/* Top handle */}
+            <div onMouseDown={(e)=>onMouseDown(i,e,'resize-t')} style={{position:"absolute",top:-4,left:"10%",height:8,width:"80%",background:"#FF6B35",cursor:"ns-resize",zIndex:20,borderRadius:2}}/>
+            {/* Bottom-right corner handle */}
+            <div onMouseDown={(e)=>onMouseDown(i,e,'resize-br')} style={{position:"absolute",bottom:-6,right:-6,width:12,height:12,background:"#fff",border:"2px solid #FF6B35",cursor:"nwse-resize",zIndex:20,borderRadius:2}}/>
+          </>}
+          {!debug&&<div onClick={()=>setSelected(f)} style={{width:"100%",height:"100%",overflow:"hidden",cursor:"pointer"}}>
             <img src={f.img} alt={f.city} style={{width:"100%",height:"100%",objectFit:"cover",display:"block",transition:"transform 0.5s cubic-bezier(0.16,1,0.3,1)",filter:"brightness(0.97)"}}
               onMouseOver={e=>{e.currentTarget.style.transform="scale(1.06)";e.currentTarget.style.filter="brightness(1.02)";}}
               onMouseOut={e=>{e.currentTarget.style.transform="scale(1)";e.currentTarget.style.filter="brightness(0.97)";}}/>
-          </div>
+          </div>}
         </div>
       ))}
       <GuideModal guide={selected} onClose={()=>setSelected(null)}/>
