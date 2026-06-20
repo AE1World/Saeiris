@@ -203,7 +203,8 @@ function PhotoDetail({photo, onClose, onLike, onDelete, user}){
       <div style={{padding:"20px 24px 32px",flex:1}}>
         {/* Title + location */}
         <h2 style={{fontSize:24,fontWeight:300,color:C.dark,margin:"0 0 4px",fontFamily:C.font,lineHeight:1.2}}>{photo.title}</h2>
-        <div style={{fontSize:13,color:C.muted,fontFamily:C.fontSans,marginBottom:18}}>{photo.city}, {photo.country} · {timeAgo(photo.created_at||photo.captured_at)}</div>
+        <div style={{fontSize:13,color:C.muted,fontFamily:C.fontSans,marginBottom:photo.description?12:18}}>{photo.city}, {photo.country} · {timeAgo(photo.created_at||photo.captured_at)}</div>
+        {photo.description&&<p style={{fontSize:14,color:"#5A4A38",fontFamily:C.font,lineHeight:1.8,margin:"0 0 18px",fontStyle:"italic"}}>{photo.description}</p>}
 
         {/* Like button */}
         <button onClick={()=>onLike(photo.id)}
@@ -307,7 +308,7 @@ function LocationSearch({onSelect,style}){
 // ── Upload Modal ──
 function UploadModal({onClose,onUpload,user}){
   const[imgFile,setImgFile]=useState(null);const[imgPreview,setImgPreview]=useState(null);
-  const[title,setTitle]=useState("");const[lat,setLat]=useState("");const[lon,setLon]=useState("");
+  const[title,setTitle]=useState("");const[description,setDescription]=useState("");const[lat,setLat]=useState("");const[lon,setLon]=useState("");
   const[city,setCity]=useState("");const[country,setCountry]=useState("");
   const[camera,setCamera]=useState("");const[lens,setLens]=useState("");const[filmType,setFilmType]=useState("");
   const[aperture,setAperture]=useState("");const[shutter,setShutter]=useState("");const[iso,setIso]=useState("");
@@ -326,7 +327,7 @@ function UploadModal({onClose,onUpload,user}){
     try{
       let image_url=null;
       if(imgFile){const ext=imgFile.name.split('.').pop();const path=`${user.id}/${Date.now()}.${ext}`;const{error:uploadErr}=await supabase.storage.from('photos').upload(path,imgFile);if(uploadErr)throw uploadErr;const{data}=supabase.storage.from('photos').getPublicUrl(path);image_url=data.publicUrl;}
-      const{error:insertErr}=await supabase.from('photos').insert({user_id:user.id,title,lat:parseFloat(lat),lon:parseFloat(lon),city,country,image_url,camera,lens:lens||null,film_type:filmType||null,aperture:aperture||null,shutter_speed:shutter||null,iso:iso||null,focal_length:focalLength||null,flash:"Off",white_balance:"Auto",tags:tags.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean),captured_at:new Date().toISOString()});
+      const{error:insertErr}=await supabase.from('photos').insert({user_id:user.id,title,description:description||null,lat:parseFloat(lat),lon:parseFloat(lon),city,country,image_url,camera,lens:lens||null,film_type:filmType||null,aperture:aperture||null,shutter_speed:shutter||null,iso:iso||null,focal_length:focalLength||null,flash:"Off",white_balance:"Auto",tags:tags.split(",").map(t=>t.trim().toLowerCase()).filter(Boolean),captured_at:new Date().toISOString()});
       if(insertErr)throw insertErr;
       setSuccess(true);onUpload();setTimeout(onClose,1500);
     }catch(e){setError(e.message);}
@@ -368,6 +369,7 @@ function UploadModal({onClose,onUpload,user}){
                 </div>}
               </div>
               <label><span style={lS}>Photo Title *</span><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Name your photo" style={{...iS,marginBottom:14}}/></label>
+              <label><span style={lS}>Description</span><textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Tell the story behind this photo — where you were, what you felt, the moment it captured..." rows={3} style={{...iS,marginBottom:14,resize:"none",lineHeight:1.6}}/></label>
               <label><span style={lS}>Location *</span></label>
               <LocationSearch onSelect={handleLocation} style={iS}/>
               <label><span style={lS}>Tags (comma separated)</span><input value={tags} onChange={e=>setTags(e.target.value)} placeholder="landscape, film, travel" style={{...iS,marginBottom:6}}/></label>
