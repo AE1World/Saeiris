@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import PhotoGlobe from "./photoglobe";
 
+const isMobile = window.innerWidth < 768;
+
 const SECTIONS = ["Home","How It Works","Travel Guides","About","Get Started"];
 const DARK_SECTIONS = [false,false,false,true,false];
 
@@ -35,7 +37,31 @@ function GlobeTab({onClick,dark}){
 // ══════════════════════════════════════════════════════════════
 // SECTION 1: HERO
 // ══════════════════════════════════════════════════════════════
-function HeroSection(){
+function HeroSectionMobile({onGlobe}){
+  return(
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-mobile.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F5F0EB"}}/>
+      <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(245,240,235,0.45) 0%,rgba(245,240,235,0.1) 30%,transparent 60%)"}}/>
+      <div style={{position:"absolute",top:"22%",left:"50%",transform:"translateX(-50%)",zIndex:10,textAlign:"center",whiteSpace:"nowrap"}}>
+        <div style={{display:"flex",alignItems:"baseline",justifyContent:"center",gap:0,fontFamily:"'Cormorant Garamond',serif",fontSize:48,fontWeight:300,lineHeight:1,letterSpacing:"-0.02em"}}>
+          <span style={{color:"#2A2420"}}>S</span><span style={{color:"#C8956C",fontWeight:400}}>ae1</span><span style={{color:"#2A2420",fontStyle:"italic"}}>ris</span>
+        </div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.22em",textTransform:"uppercase",color:"#8A7A68",marginTop:6,whiteSpace:"nowrap",textAlign:"center"}}>Curated travel · Captured on film</div>
+      </div>
+      <button onClick={onGlobe} style={{position:"absolute",top:56,right:24,zIndex:10,display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:40,background:"rgba(42,36,32,0.65)",border:"1px solid rgba(200,149,108,0.3)",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",fontSize:11,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+        Globe
+      </button>
+      <div style={{position:"absolute",bottom:60,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",flexDirection:"column",alignItems:"center",gap:6}}>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:9,letterSpacing:"0.22em",textTransform:"uppercase",color:"#8A7A68",opacity:0.8}}>Scroll</span>
+        <div style={{width:1,height:28,background:"linear-gradient(to bottom,rgba(138,122,104,0.8),transparent)"}}/>
+      </div>
+    </section>
+  );
+}
+
+function HeroSection({onGlobe}){
+  if(isMobile)return <HeroSectionMobile onGlobe={onGlobe}/>;
   return(
     <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-bg.png')",backgroundSize:"cover",backgroundPosition:"center bottom",backgroundColor:"#F5F0EB"}}>
@@ -110,7 +136,51 @@ const SERVICES=[
     ]},
 ];
 
+function HowItWorksSectionMobile(){
+  const[activeService,setActiveService]=useState(null);
+  const CARD_SERVICES=[
+    {num:"01",title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — a living map of real travel moments captured on real film cameras by real travelers.",serviceIdx:0},
+    {num:"02",title:"Full-Service Planning",desc:"We handle every detail of your trip — flights, accommodations, excursions, restaurant reservations, and local transportation. You just show up.",serviceIdx:1},
+    {num:"03",title:"Canon AE-1 Experience",desc:"Before every trip, a fully serviced 1976 Canon AE-1 loaded with Kodak UltraMax 400 ships to your door. 36 exposures. No filters. No edits.",serviceIdx:2},
+  ];
+  return(
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-mobile.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F5F0EB"}}/>
+      <div style={{position:"absolute",inset:0,background:"rgba(245,240,235,0.25)"}}/>
+      <div style={{position:"relative",zIndex:1,padding:"0 28px",overflowY:"auto",maxHeight:"100vh",display:"flex",flexDirection:"column",justifyContent:"center"}}>
+        <div style={{marginBottom:28,paddingTop:48}}>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>How It Works</div>
+          <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:300,color:"#2A2420",lineHeight:1.15,margin:0}}>
+            Not Just a Trip.<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>A Memory</span> You Can Hold.
+          </h2>
+          <div style={{width:36,height:1,background:"#C8956C",marginTop:16}}/>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {CARD_SERVICES.map((c)=>(
+            <div key={c.num} style={{background:"rgba(253,251,248,0.93)",borderLeft:"3px solid #C8956C",padding:"18px 20px",boxShadow:"0 4px 24px rgba(42,36,32,0.10),0 1px 4px rgba(42,36,32,0.06)"}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:"#C8956C",marginBottom:6}}>{c.num}</div>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,fontWeight:400,color:"#2A2420",marginBottom:8}}>{c.title}</div>
+              <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,color:"#6A5A48",lineHeight:1.75,margin:"0 0 12px"}}>{c.desc}</p>
+              <button onClick={()=>setActiveService(SERVICES[c.serviceIdx])}
+                style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8956C",background:"transparent",border:"none",padding:0,cursor:"pointer"}}>
+                Learn More →
+              </button>
+            </div>
+          ))}
+        </div>
+        <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:6,opacity:0.5,marginTop:28,paddingBottom:48}}>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:9,letterSpacing:"0.22em",textTransform:"uppercase",color:"#8A7A68"}}>Scroll</span>
+          <div style={{width:1,height:24,background:"linear-gradient(to bottom,#8A7A68,transparent)"}}/>
+        </div>
+      </div>
+      <ServiceModal service={activeService} onClose={()=>setActiveService(null)}/>
+    </section>
+  );
+}
+
 function HowItWorksSection(){
+  if(isMobile)return <HowItWorksSectionMobile/>;
+
   const[activeService,setActiveService]=useState(null);
   const[hoveredIdx,setHoveredIdx]=useState(null);
 
@@ -1038,10 +1108,10 @@ export default function App(){
   return(
     <div style={{width:"100vw",height:"100vh",overflow:"hidden",fontFamily:"'Cormorant Garamond',serif"}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}`}</style>
-      <SectionNav active={activeSection} onNav={scrollToSection}/>
-      <GlobeTab onClick={()=>setPage("globe")} dark={DARK_SECTIONS[activeSection]}/>
+      {!isMobile&&<SectionNav active={activeSection} onNav={scrollToSection}/>}
+      {!isMobile&&<GlobeTab onClick={()=>setPage("globe")} dark={DARK_SECTIONS[activeSection]}/>}
       <div ref={containerRef} style={{width:"100vw",height:"100vh",overflow:"hidden"}}>
-        <HeroSection/>
+        <HeroSection onGlobe={()=>setPage("globe")}/>
         <HowItWorksSection/>
         <TravelGuidesSection onGlobe={()=>setPage("globe")}/>
         <AboutSection/>
