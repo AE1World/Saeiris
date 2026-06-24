@@ -1019,7 +1019,7 @@ function TravelGuidesSectionMobile(){
   const guide=GUIDES[idx];
   const swipeRef=useRef(null);
 
-  const photo={top:29.5,left:16.5,width:67.5,height:45.25};
+  const photo={top:29.37,left:22.95,width:54.52,height:45.22};
   const plaqueTop=80;
 
   const onTouchStart=(e)=>{swipeRef.current=e.touches[0].clientX;};
