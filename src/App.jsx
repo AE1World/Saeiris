@@ -663,7 +663,157 @@ const GUIDE_SLIDES = {
 };
 
 // ── GuideModal ──
+function GuideModalMobile({guide,onClose}){
+  const[slide,setSlide]=useState(0);
+  useEffect(()=>{setSlide(0);},[guide]);
+  if(!guide)return null;
+  const cityData=GUIDE_SLIDES[guide.city];
+  const slides=cityData?cityData.slides:[];
+  const heroImg=cityData?.heroImg||guide.img;
+  const curr=slides[slide];
+  const font="'Cormorant Garamond',serif";
+  const accent="#C8956C";
+  const dark="#2A2420";
+  if(!curr)return null;
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(20,18,15,0.6)",display:"flex",flexDirection:"column"}}>
+      <div style={{flex:1,display:"flex",flexDirection:"column",background:"#FDFBF8",marginTop:"8vh",borderRadius:"20px 20px 0 0",overflow:"hidden"}}>
+
+        {/* Photo — 35% */}
+        <div style={{height:"35%",position:"relative",flexShrink:0}}>
+          <div style={{position:"absolute",inset:0,backgroundImage:`url('${heroImg}')`,backgroundSize:"cover",backgroundPosition:"center"}}/>
+          <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,transparent 40%,rgba(20,18,15,0.65) 100%)"}}/>
+          <button onClick={onClose} style={{position:"absolute",top:14,right:14,width:30,height:30,borderRadius:"50%",background:"rgba(253,251,248,0.15)",border:"1px solid rgba(253,251,248,0.3)",color:"#fff",fontSize:16,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontFamily:font}}>×</button>
+          <div style={{position:"absolute",bottom:14,left:18}}>
+            <div style={{fontFamily:font,fontSize:22,fontWeight:300,color:"#fff",lineHeight:1}}>{guide.city}</div>
+            <div style={{fontFamily:font,fontSize:12,fontStyle:"italic",color:"rgba(253,251,248,0.75)",marginTop:3}}>{guide.country}</div>
+          </div>
+          <div style={{position:"absolute",bottom:14,right:18,fontFamily:font,fontSize:10,color:"rgba(255,255,255,0.5)",letterSpacing:"0.1em"}}>{String(slide+1).padStart(2,"0")} / {String(slides.length).padStart(2,"0")}</div>
+        </div>
+
+        {/* Slide label */}
+        <div style={{padding:"14px 20px 0",flexShrink:0}}>
+          <div style={{fontFamily:font,fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:accent}}>
+            {curr.type==="overview"?"Overview":curr.type==="investment"?"Travel Style":curr.type==="stays"?"Where You'll Stay":curr.type==="experiences"?"Experiences":curr.type==="film"?"On Film":""}
+          </div>
+          <div style={{fontFamily:font,fontSize:20,fontWeight:300,color:dark,marginTop:4}}>
+            {curr.type==="overview"?guide.city+", "+guide.country:curr.type==="investment"?"How We Travel":curr.title||guide.city}
+          </div>
+          <div style={{width:24,height:1,background:accent,marginTop:8}}/>
+        </div>
+
+        {/* Scrollable content — 65% minus header */}
+        <div style={{flex:1,overflowY:"auto",padding:"16px 20px 20px"}}>
+
+          {curr.type==="overview"&&<>
+            <p style={{fontFamily:font,fontSize:12,color:accent,letterSpacing:"0.1em",textTransform:"uppercase",margin:"0 0 10px"}}>{curr.tagline}</p>
+            <p style={{fontFamily:font,fontSize:14,color:"#5A4A38",lineHeight:1.85,margin:"0 0 18px"}}>{curr.intro}</p>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:18}}>
+              {curr.stats.map((s,i)=>(
+                <div key={i} style={{padding:"12px 14px",background:"rgba(200,149,108,0.04)",border:"1px solid rgba(200,149,108,0.12)"}}>
+                  <div style={{fontFamily:font,fontSize:9,color:"#A89A88",textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:4}}>{s.l}</div>
+                  {Array.isArray(s.v)?s.v.map((line,li)=>(<div key={li} style={{fontFamily:font,fontSize:13,color:dark,lineHeight:1.5}}>{line}</div>)):<div style={{fontFamily:font,fontSize:13,color:dark}}>{s.v}</div>}
+                </div>
+              ))}
+            </div>
+            <div style={{fontFamily:font,fontSize:9,letterSpacing:"0.15em",textTransform:"uppercase",color:"#A89A88",marginBottom:8}}>What We Handle</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:0,border:"1px solid rgba(200,149,108,0.1)"}}>
+              {COST_BREAKDOWN_ITEMS.map((b,i)=>(
+                <div key={i} style={{display:"flex",alignItems:"center",padding:"8px 12px",borderBottom:i<COST_BREAKDOWN_ITEMS.length-2?"1px solid rgba(200,149,108,0.07)":"none",borderRight:i%2===0?"1px solid rgba(200,149,108,0.07)":"none"}}>
+                  <div style={{width:4,height:4,borderRadius:"50%",background:accent,opacity:0.6,marginRight:8,flexShrink:0}}/>
+                  <span style={{fontFamily:font,fontSize:12,color:"#5A4A38"}}>{b.l}</span>
+                </div>
+              ))}
+            </div>
+          </>}
+
+          {curr.type==="investment"&&<>
+            <p style={{fontFamily:font,fontSize:13,color:"#8A7A68",lineHeight:1.7,margin:"0 0 14px",fontStyle:"italic"}}>{curr.tip}</p>
+            <div style={{display:"flex",flexDirection:"column",gap:8}}>
+              {curr.tiers.map((t,i)=>{
+                const signs=i===0?"$":i===1?"$$":"$$$";
+                const signColors=["rgba(200,149,108,0.5)","rgba(200,149,108,0.75)","#C8956C"];
+                return(
+                  <div key={i} style={{padding:"12px 14px",background:i===1?"rgba(200,149,108,0.05)":"transparent",border:"1px solid "+(i===1?"rgba(200,149,108,0.18)":"rgba(200,149,108,0.08)"),display:"flex",gap:12,alignItems:"flex-start"}}>
+                    <div style={{flexShrink:0,minWidth:56}}>
+                      <div style={{fontFamily:font,fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:accent,marginBottom:3}}>{t.name}</div>
+                      <div style={{fontFamily:font,fontSize:14,fontWeight:700,color:signColors[i]}}>{signs}</div>
+                    </div>
+                    <div style={{width:1,background:"rgba(200,149,108,0.12)",alignSelf:"stretch",flexShrink:0}}/>
+                    <div style={{fontFamily:font,fontSize:13,color:"#6A5A48",lineHeight:1.6}}>{t.desc}</div>
+                  </div>
+                );
+              })}
+            </div>
+          </>}
+
+          {curr.type==="stays"&&<>
+            <p style={{fontFamily:font,fontSize:14,color:"#5A4A38",lineHeight:1.85,margin:"0 0 16px"}}>{curr.intro}</p>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {curr.options.map((o,i)=>(
+                <div key={i} style={{padding:"14px 16px",border:"1px solid rgba(200,149,108,0.12)",background:"rgba(200,149,108,0.02)"}}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:5}}>
+                    <div style={{fontFamily:font,fontSize:15,fontWeight:500,color:dark}}>{o.name}</div>
+                    <span style={{fontFamily:font,fontSize:9,color:accent,letterSpacing:"0.1em",textTransform:"uppercase",background:"rgba(200,149,108,0.08)",padding:"3px 8px",whiteSpace:"nowrap",marginLeft:8}}>{o.type}</span>
+                  </div>
+                  <p style={{fontFamily:font,fontSize:13,color:"#6A5A48",lineHeight:1.65,margin:"0 0 8px"}}>{o.desc}</p>
+                  {o.link&&o.link!=="#"&&<a href={o.link} target="_blank" rel="noopener noreferrer" style={{fontFamily:font,fontSize:11,color:accent,letterSpacing:"0.1em",textTransform:"uppercase",textDecoration:"none"}}>View Property →</a>}
+                </div>
+              ))}
+            </div>
+          </>}
+
+          {curr.type==="experiences"&&<>
+            <p style={{fontFamily:font,fontSize:14,color:"#5A4A38",lineHeight:1.85,margin:"0 0 16px"}}>{curr.intro}</p>
+            <div style={{display:"flex",flexDirection:"column",gap:10}}>
+              {curr.list.map((x,i)=>(
+                <div key={i} style={{padding:"14px 16px",border:"1px solid rgba(200,149,108,0.1)",background:"rgba(200,149,108,0.025)",borderLeft:`3px solid ${accent}`}}>
+                  <div style={{fontFamily:font,fontSize:15,fontWeight:500,color:dark,marginBottom:5}}>{x.name}</div>
+                  <div style={{fontFamily:font,fontSize:13,color:"#6A5A48",lineHeight:1.7,marginBottom:x.link?8:0}}>{x.desc}</div>
+                  {x.link&&<a href={x.link} target="_blank" rel="noopener noreferrer" style={{fontFamily:font,fontSize:11,color:accent,letterSpacing:"0.1em",textTransform:"uppercase",textDecoration:"none"}}>Book This →</a>}
+                </div>
+              ))}
+            </div>
+          </>}
+
+          {curr.type==="film"&&<>
+            <div style={{display:"flex",flexDirection:"column",alignItems:"center",textAlign:"center",padding:"20px 0"}}>
+              <div style={{width:60,height:60,borderRadius:"50%",background:"rgba(200,149,108,0.08)",border:"1px solid rgba(200,149,108,0.2)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:20}}>
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke={accent} strokeWidth="1.2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+              </div>
+              <div style={{fontFamily:font,fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:accent,marginBottom:10}}>The PhotoGlobe</div>
+              <h3 style={{fontFamily:font,fontSize:22,fontWeight:300,color:dark,lineHeight:1.25,margin:"0 0 14px"}}>Every traveler sees <span style={{fontStyle:"italic",color:accent}}>{curr.city}</span> differently.</h3>
+              <p style={{fontFamily:font,fontSize:14,color:"#6A5A48",lineHeight:1.85,margin:"0 0 24px"}}>{curr.body||`Our PhotoGlobe is a living collection of real photographs from real travelers — each pinned to where it was taken.`}</p>
+              <button onClick={onClose} style={{fontFamily:font,fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",color:"#FDFBF8",background:dark,border:"none",padding:"12px 24px",cursor:"pointer"}}>Explore the Globe →</button>
+            </div>
+          </>}
+
+        </div>
+
+        {/* Navigation footer */}
+        <div style={{padding:"12px 20px",borderTop:"1px solid rgba(200,149,108,0.1)",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0,background:"#FDFBF8"}}>
+          <div style={{display:"flex",gap:6,alignItems:"center"}}>
+            {slides.map((_,i)=>(
+              <button key={i} onClick={()=>setSlide(i)} style={{width:slide===i?20:6,height:6,borderRadius:3,background:slide===i?accent:"rgba(200,149,108,0.2)",border:"none",cursor:"pointer",transition:"all 0.3s",padding:0}}/>
+            ))}
+          </div>
+          <div style={{display:"flex",gap:8}}>
+            <button onClick={()=>setSlide(s=>Math.max(0,s-1))} disabled={slide===0}
+              style={{width:36,height:36,borderRadius:"50%",border:"1px solid rgba(200,149,108,0.2)",background:"transparent",color:slide===0?"rgba(200,149,108,0.2)":accent,cursor:slide===0?"default":"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>←</button>
+            <button onClick={()=>setSlide(s=>Math.min(slides.length-1,s+1))} disabled={slide===slides.length-1}
+              style={{width:36,height:36,borderRadius:"50%",border:"none",background:slide===slides.length-1?"transparent":accent,color:slide===slides.length-1?"rgba(200,149,108,0.2)":"#fff",cursor:slide===slides.length-1?"default":"pointer",fontSize:16,display:"flex",alignItems:"center",justifyContent:"center"}}>→</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 function GuideModal({guide,onClose,onGlobe}){
+  if(isMobile)return <GuideModalMobile guide={guide} onClose={onClose}/>;
+
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
   if(!guide)return null;
@@ -862,7 +1012,66 @@ function GuideModal({guide,onClose,onGlobe}){
 }
 
 // ── TravelGuidesSection ──
+// ── Mobile Travel Guides ──
+function TravelGuidesSectionMobile(){
+  const[idx,setIdx]=useState(0);
+  const[activeMobileGuide,setActiveMobileGuide]=useState(null);
+  const guide=GUIDES[idx];
+  const swipeRef=useRef(null);
+
+  const photo={top:29.5,left:16.5,width:67.5,height:45.25};
+  const plaqueTop=80;
+
+  const onTouchStart=(e)=>{swipeRef.current=e.touches[0].clientX;};
+  const onTouchEnd=(e)=>{
+    if(swipeRef.current===null)return;
+    const diff=swipeRef.current-e.changedTouches[0].clientX;
+    if(Math.abs(diff)>40){diff>0?setIdx(i=>(i+1)%GUIDES.length):setIdx(i=>(i-1+GUIDES.length)%GUIDES.length);}
+    swipeRef.current=null;
+  };
+
+  return(
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+      <div style={{position:"absolute",inset:0,backgroundImage:"url('/travelguides-mobile.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F5F0EB"}}/>
+
+      <div style={{position:"absolute",top:48,left:0,right:0,zIndex:10,textAlign:"center"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,letterSpacing:"0.25em",textTransform:"uppercase",color:"#2A2420",marginBottom:10}}>Travel Guides</div>
+        <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:42,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.15,margin:0}}>Showcase</h2>
+        <div style={{width:36,height:1,background:"#C8956C",margin:"16px auto 0"}}/>
+      </div>
+
+      <div
+        onClick={()=>setActiveMobileGuide(guide)}
+        style={{position:"absolute",top:`${photo.top}%`,left:`${photo.left}%`,width:`${photo.width}%`,height:`${photo.height}%`,backgroundImage:`url('${guide.img}')`,backgroundSize:"cover",backgroundPosition:"center",zIndex:5,cursor:"pointer"}}
+      />
+
+      <div style={{position:"absolute",top:`${plaqueTop}%`,left:"50%",transform:"translateX(-50%)",zIndex:10,textAlign:"center",pointerEvents:"none"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,fontWeight:400,color:"#C8956C",letterSpacing:"0.18em",textTransform:"uppercase"}}>{guide.city}</div>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,color:"#8A7A68",letterSpacing:"0.12em",textTransform:"uppercase",marginTop:2}}>{guide.country}</div>
+      </div>
+
+      <button onClick={()=>setIdx(i=>(i-1+GUIDES.length)%GUIDES.length)} style={{position:"absolute",left:12,top:"52%",transform:"translateY(-50%)",zIndex:10,background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,opacity:0.6}}>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,color:"#2A2420",lineHeight:1}}>‹</span>
+      </button>
+      <button onClick={()=>setIdx(i=>(i+1)%GUIDES.length)} style={{position:"absolute",right:12,top:"52%",transform:"translateY(-50%)",zIndex:10,background:"transparent",border:"none",cursor:"pointer",display:"flex",flexDirection:"column",alignItems:"center",gap:4,opacity:0.6}}>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:22,color:"#2A2420",lineHeight:1}}>›</span>
+      </button>
+
+      
+
+      <div style={{position:"absolute",bottom:20,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",flexDirection:"column",alignItems:"center",gap:4,opacity:0.5}}>
+        <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:9,letterSpacing:"0.22em",textTransform:"uppercase",color:"#8A7A68"}}>Scroll</span>
+        <div style={{width:1,height:20,background:"linear-gradient(to bottom,#8A7A68,transparent)"}}/>
+      </div>
+
+      {activeMobileGuide&&<GuideModal guide={activeMobileGuide} onClose={()=>setActiveMobileGuide(null)}/>}
+    </section>
+  );
+}
+
 function TravelGuidesSection({onGlobe}){
+  if(isMobile)return <TravelGuidesSectionMobile/>;
+
   const[selected,setSelected]=useState(null);
   const debug=false;
   const[positions,setPositions]=useState([
