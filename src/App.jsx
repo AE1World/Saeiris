@@ -1262,7 +1262,7 @@ export default function App(){
     const el=containerRef.current;
     if(el){
       el.scrollTo({top:idx*window.innerHeight,behavior:"smooth"});
-      setTimeout(()=>{isScrolling.current=false;},800);
+      setTimeout(()=>{isScrolling.current=false;},1000);
     }
   },[]);
 
@@ -1286,11 +1286,14 @@ export default function App(){
     if(page!=="home")return;
     const el=containerRef.current;if(!el)return;
     let startY=0;
-    const onTS=(e)=>{startY=e.touches[0].clientY;};
+    let startX=0;
+    const onTS=(e)=>{startY=e.touches[0].clientY; startX=e.touches[0].clientX;};
     const onTE=(e)=>{
       if(isScrolling.current)return;
       const dy=startY-e.changedTouches[0].clientY;
-      if(Math.abs(dy)>50){
+      const dx=startX-e.changedTouches[0].clientX;
+      if(Math.abs(dx)>Math.abs(dy))return;
+      if(Math.abs(dy)>60){
         if(dy>0)scrollToSection(activeSection+1);
         else scrollToSection(activeSection-1);
       }
@@ -1299,6 +1302,15 @@ export default function App(){
     el.addEventListener("touchend",onTE,{passive:true});
     return()=>{el.removeEventListener("touchstart",onTS);el.removeEventListener("touchend",onTE);};
   },[page,activeSection,scrollToSection]);
+
+  useEffect(()=>{
+    const onResize=()=>{
+      const el=containerRef.current;
+      if(el)el.scrollTop=activeSection*window.innerHeight;
+    };
+    window.addEventListener("resize",onResize);
+    return()=>window.removeEventListener("resize",onResize);
+  },[activeSection]);
 
   useEffect(()=>{
     if(page!=="home")return;
