@@ -39,7 +39,8 @@ function GlobeTab({onClick,dark}){
 // ══════════════════════════════════════════════════════════════
 function HeroSectionMobile({onGlobe}){
   return(
-    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section visible":undefined}>
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-mobile.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F5F0EB"}}/>
       <div style={{position:"absolute",inset:0,background:"linear-gradient(to bottom,rgba(245,240,235,0.45) 0%,rgba(245,240,235,0.1) 30%,transparent 60%)"}}/>
       <div style={{position:"absolute",top:"22%",left:"50%",transform:"translateX(-50%)",zIndex:10,textAlign:"center",whiteSpace:"nowrap"}}>
@@ -63,7 +64,8 @@ function HeroSectionMobile({onGlobe}){
 function HeroSection({onGlobe}){
   if(isMobile)return <HeroSectionMobile onGlobe={onGlobe}/>;
   return(
-    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section":undefined}>
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-bg.png')",backgroundSize:"cover",backgroundPosition:"center bottom",backgroundColor:"#F5F0EB"}}>
         <div style={{position:"absolute",inset:0,background:"linear-gradient(180deg,rgba(245,240,235,0.55) 0%,rgba(245,240,235,0.2) 35%,transparent 55%)"}}/>
       </div>
@@ -258,7 +260,8 @@ function HowItWorksSection(){
   const LABELS=["Map → Join the Globe","Boarding Pass → Full-Service Planning","Sunglasses → Canon AE-1 Experience"];
 
   return(
-    <section ref={containerRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section ref={containerRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section":undefined}>
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/howitworks-bg.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F8F4F0"}}/>
 
       {/* Debug controls */}
@@ -666,6 +669,23 @@ const GUIDE_SLIDES = {
 function GuideModalMobile({guide,onClose}){
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
+  useEffect(()=>{
+    const el=document.documentElement;
+    const body=document.body;
+    const prevElOverflow=el.style.overflow;
+    const prevBodyOverflow=body.style.overflow;
+    el.style.overflow='hidden';
+    body.style.overflow='hidden';
+    // Also find and lock any scrolling parent
+    const scrollParent=document.querySelector('[style*="overflow: scroll"], [style*="overflow:scroll"]');
+    let prevScrollOverflow='';
+    if(scrollParent){prevScrollOverflow=scrollParent.style.overflowY;scrollParent.style.overflowY='hidden';}
+    return()=>{
+      el.style.overflow=prevElOverflow;
+      body.style.overflow=prevBodyOverflow;
+      if(scrollParent)scrollParent.style.overflowY=prevScrollOverflow;
+    };
+  },[]);
   if(!guide)return null;
   const cityData=GUIDE_SLIDES[guide.city];
   const slides=cityData?cityData.slides:[];
@@ -677,8 +697,8 @@ function GuideModalMobile({guide,onClose}){
   if(!curr)return null;
 
   return(
-    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(20,18,15,0.6)",display:"flex",flexDirection:"column"}}>
-      <div style={{flex:1,display:"flex",flexDirection:"column",background:"#FDFBF8",marginTop:"8vh",borderRadius:"20px 20px 0 0",overflow:"hidden"}}>
+    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(20,18,15,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+      <div style={{width:"90vw",height:"90vh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
 
         {/* Photo — 35% */}
         <div style={{height:"35%",position:"relative",flexShrink:0}}>
@@ -1019,7 +1039,7 @@ function TravelGuidesSectionMobile(){
   const guide=GUIDES[idx];
   const swipeRef=useRef(null);
 
-  const photo={top:29.37,left:22.95,width:54.52,height:45.22};
+  const photo={top:29.4,left:21.5,width:57.5,height:45.22};
   const plaqueTop=80;
 
   const onTouchStart=(e)=>{swipeRef.current=e.touches[0].clientX;};
@@ -1031,7 +1051,8 @@ function TravelGuidesSectionMobile(){
   };
 
   return(
-    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+    <section style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section":undefined} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
       <div style={{position:"absolute",inset:0,backgroundImage:"url('/travelguides-mobile.png')",backgroundSize:"cover",backgroundPosition:"center",backgroundColor:"#F5F0EB"}}/>
 
       <div style={{position:"absolute",top:48,left:0,right:0,zIndex:10,textAlign:"center"}}>
@@ -1120,7 +1141,8 @@ function TravelGuidesSection({onGlobe}){
   const frames=positions.map((p,i)=>({...p,...GUIDES[i]}));
 
   return(
-    <section ref={containerRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section ref={containerRef} style={{width:"100vw",height:"100vh",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section":undefined}>
       <img src="/guides-wall.png" alt="" style={{position:"absolute",top:0,left:0,width:"100%",height:"100%",objectFit:"cover",objectPosition:"center",pointerEvents:"none"}}/>
       <div style={{position:"absolute",left:"77.77%",top:"3.45%",textAlign:"left",zIndex:2}}>
         <div style={{fontSize:"clamp(9px,0.85vw,12px)",fontWeight:600,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Explore</div>
@@ -1157,7 +1179,8 @@ function TravelGuidesSection({onGlobe}){
 // ══════════════════════════════════════════════════════════════
 function AboutSection(){
   return(
-    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#2A2420",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"center",justifyContent:"center",background:"#2A2420",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section":undefined}>
       <div style={{position:"absolute",inset:0,opacity:0.06,backgroundImage:"url(\"data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")"}}/>
       <div style={{position:"absolute",left:"10%",top:"23.58%",width:400,height:480,borderRadius:8,border:"1px solid rgba(200,149,108,0.12)",overflow:"hidden",zIndex:1}}>
         <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
@@ -1206,7 +1229,8 @@ function GetStartedSection(){
 
   const iS={width:"100%",padding:"14px 16px",border:"none",borderBottom:"1px solid rgba(200,149,108,0.2)",background:"transparent",color:"#2A2420",fontSize:16,fontFamily:"'Cormorant Garamond',serif",outline:"none",transition:"border-color 0.3s"};
   return(
-    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"flex-start",justifyContent:"flex-start",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}>
+    <section style={{width:"100vw",height:"100vh",display:"flex",alignItems:"flex-start",justifyContent:"flex-start",background:"#FDFBF8",position:"relative",overflow:"hidden",flexShrink:0}}
+        className={isMobile?"mobile-section":undefined}>
       <div style={{position:"absolute",left:"35.36%",top:"22.48%",textAlign:"center",maxWidth:560,width:"100%",padding:"0 40px",zIndex:1}}>
         <div style={{fontSize:12,fontWeight:600,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:12}}>Start Your Journey</div>
         <h2 style={{fontSize:"clamp(28px,3.5vw,42px)",fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.15,margin:"0 0 6px"}}>
@@ -1243,6 +1267,190 @@ function GetStartedSection(){
         )}
       </div>
     </section>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// MOBILE LONG-SCROLL LAYOUT
+// ══════════════════════════════════════════════════════════════
+function MobileApp({onGlobe}){
+  return(
+    <div style={{width:"100vw",fontFamily:"'Cormorant Garamond',serif",backgroundImage:"url('/wall-texture.png')",backgroundSize:"100% auto",backgroundRepeat:"repeat-y",backgroundPosition:"top center",overflowX:"hidden",position:"relative"}}>
+      <div style={{position:"relative",zIndex:1}}>
+
+      {/* HERO — full screen with bottom fade */}
+      <div style={{position:"relative",width:"100vw",height:"100svh",flexShrink:0}}>
+        <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-mobile.png')",backgroundSize:"cover",backgroundPosition:"center"}}/>
+        {/* Bottom fade into wall — starts higher */}
+        <div style={{position:"absolute",bottom:0,left:0,right:0,height:"45%",background:"linear-gradient(to bottom,transparent 0%,rgba(240,235,230,0.6) 50%,#F0EBE6 100%)"}}/>
+        {/* Logo */}
+        <div style={{position:"absolute",top:"22%",left:"50%",transform:"translateX(-50%)",zIndex:10,textAlign:"center",whiteSpace:"nowrap"}}>
+          <div style={{display:"flex",alignItems:"baseline",justifyContent:"center",fontFamily:"'Cormorant Garamond',serif",fontSize:48,fontWeight:300,lineHeight:1,letterSpacing:"-0.02em"}}>
+            <span style={{color:"#2A2420"}}>S</span><span style={{color:"#C8956C",fontWeight:400}}>ae1</span><span style={{color:"#2A2420",fontStyle:"italic"}}>ris</span>
+          </div>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.22em",textTransform:"uppercase",color:"#8A7A68",marginTop:6,whiteSpace:"nowrap",textAlign:"center"}}>Curated travel · Captured on film</div>
+        </div>
+        {/* Globe button */}
+        <button onClick={onGlobe} style={{position:"absolute",top:56,right:24,zIndex:10,display:"flex",alignItems:"center",gap:6,padding:"8px 16px",borderRadius:40,background:"rgba(42,36,32,0.65)",border:"1px solid rgba(200,149,108,0.3)",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",fontSize:11,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",cursor:"pointer"}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          Globe
+        </button>
+        {/* Scroll indicator */}
+        <div style={{position:"absolute",bottom:60,left:"50%",transform:"translateX(-50%)",zIndex:10,display:"flex",flexDirection:"column",alignItems:"center",gap:6,opacity:0.5}}>
+          <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:9,letterSpacing:"0.22em",textTransform:"uppercase",color:"#8A7A68"}}>Scroll</span>
+          <div style={{width:1,height:28,background:"linear-gradient(to bottom,#8A7A68,transparent)"}}/>
+        </div>
+      </div>
+
+      {/* HOW IT WORKS — flows from hero */}
+      <div style={{padding:"60px 28px 60px"}}>
+        <div style={{marginBottom:32}}>
+          <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>How It Works</div>
+          <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:300,color:"#2A2420",lineHeight:1.15,margin:0}}>
+            Not Just a Trip.<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>A Memory</span> You Can Hold.
+          </h2>
+          <div style={{width:36,height:1,background:"#C8956C",marginTop:16}}/>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:14}}>
+          {[
+            {num:"01",title:"Join the Globe",desc:"Your developed photos join our interactive PhotoGlobe — a living map of real travel moments captured on real film cameras by real travelers.",idx:0},
+            {num:"02",title:"Full-Service Planning",desc:"We handle every detail of your trip — flights, accommodations, excursions, restaurant reservations, and local transportation. You just show up.",idx:1},
+            {num:"03",title:"Canon AE-1 Experience",desc:"Before every trip, a fully serviced 1976 Canon AE-1 loaded with Kodak UltraMax 400 ships to your door. 36 exposures. No filters. No edits.",idx:2},
+          ].map((c)=>(
+            <div key={c.num} style={{background:"rgba(253,251,248,0.95)",borderLeft:"3px solid #C8956C",padding:"18px 20px",boxShadow:"0 4px 24px rgba(42,36,32,0.08),0 1px 4px rgba(42,36,32,0.04)"}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.18em",textTransform:"uppercase",color:"#C8956C",marginBottom:6}}>{c.num}</div>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,fontWeight:400,color:"#2A2420",marginBottom:8}}>{c.title}</div>
+              <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,color:"#6A5A48",lineHeight:1.75,margin:"0 0 12px"}}>{c.desc}</p>
+              <HowItWorksLearnMore idx={c.idx}/>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* TRAVEL GUIDES */}
+      <MobileTravelGuides onGlobe={onGlobe}/>
+
+      {/* ABOUT */}
+      <MobileAbout/>
+
+      {/* GET STARTED */}
+      <MobileGetStarted/>
+
+      {/* GLOBE CTA */}
+      <div style={{background:"#2A2420",padding:"60px 28px",textAlign:"center"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:12}}>PhotoGlobe</div>
+        <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 16px"}}>See the world through<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>their lens.</span></h2>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,color:"rgba(253,251,248,0.6)",lineHeight:1.8,margin:"0 0 28px"}}>Every trip we plan gets pinned to the globe. Browse real photos from real travelers — captured on film.</p>
+        <button onClick={onGlobe} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:12,letterSpacing:"0.15em",textTransform:"uppercase",color:"#2A2420",background:"#C8956C",border:"none",padding:"14px 32px",cursor:"pointer"}}>Explore the Globe</button>
+      </div>
+
+      </div>{/* end zIndex wrapper */}
+    </div>
+  );
+}
+
+// Wrapper components for mobile sections
+function HowItWorksLearnMore({idx}){
+  const[active,setActive]=useState(null);
+  return(
+    <>
+      <button onClick={()=>setActive(SERVICES[idx])} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,letterSpacing:"0.12em",textTransform:"uppercase",color:"#C8956C",background:"transparent",border:"none",padding:0,cursor:"pointer"}}>Learn More →</button>
+      <ServiceModal service={active} onClose={()=>setActive(null)}/>
+    </>
+  );
+}
+
+function MobileTravelGuides({onGlobe}){
+  const[idx,setIdx]=useState(0);
+  const[activeGuide,setActiveGuide]=useState(null);
+  const guide=GUIDES[idx];
+  const swipeRef=useRef(null);
+  const onTouchStart=(e)=>{swipeRef.current=e.touches[0].clientX;};
+  const onTouchEnd=(e)=>{
+    if(swipeRef.current===null)return;
+    const diff=swipeRef.current-e.changedTouches[0].clientX;
+    if(Math.abs(diff)>40){diff>0?setIdx(i=>(i+1)%GUIDES.length):setIdx(i=>(i-1+GUIDES.length)%GUIDES.length);}
+    swipeRef.current=null;
+  };
+  return(
+    <div style={{padding:"60px 0 60px"}}>
+      {/* Title */}
+      <div style={{textAlign:"center",marginBottom:32,padding:"0 28px"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,letterSpacing:"0.25em",textTransform:"uppercase",color:"#2A2420",marginBottom:8}}>Travel Guides</div>
+        <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:38,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.15,margin:0}}>Showcase</h2>
+        <div style={{width:36,height:1,background:"#C8956C",margin:"16px auto 0"}}/>
+      </div>
+      {/* Frame */}
+      <div style={{position:"relative",width:"100vw"}} onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
+        {/* Code-built frame */}
+        <div style={{margin:"0 auto",width:"75vw",border:"8px solid #1A1A1A",boxShadow:"0 8px 40px rgba(0,0,0,0.25)",position:"relative",aspectRatio:"3/4",cursor:"pointer"}} onClick={()=>setActiveGuide(guide)}>
+          <div style={{position:"absolute",inset:0,backgroundImage:`url('${guide.img}')`,backgroundSize:"cover",backgroundPosition:"center"}}/>
+        </div>
+        {/* Plaque */}
+        <div style={{textAlign:"center",marginTop:16,position:"relative"}}>
+          <img src="/plaque.png" alt="" style={{width:"42%",maxWidth:168,display:"block",margin:"0 auto"}}/>
+          <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",textAlign:"center",pointerEvents:"none"}}>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:16,fontWeight:400,color:"#C8956C",letterSpacing:"0.2em",textTransform:"uppercase"}}>{guide.city}</div>
+            <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,color:"rgba(200,149,108,0.7)",letterSpacing:"0.15em",textTransform:"uppercase",marginTop:2}}>{guide.country}</div>
+          </div>
+        </div>
+        {/* Arrows */}
+        <button onClick={()=>setIdx(i=>(i-1+GUIDES.length)%GUIDES.length)} style={{position:"absolute",left:8,top:"45%",transform:"translateY(-50%)",background:"transparent",border:"none",color:"rgba(42,36,32,0.5)",fontSize:28,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif"}}>‹</button>
+        <button onClick={()=>setIdx(i=>(i+1)%GUIDES.length)} style={{position:"absolute",right:8,top:"45%",transform:"translateY(-50%)",background:"transparent",border:"none",color:"rgba(42,36,32,0.5)",fontSize:28,cursor:"pointer",fontFamily:"'Cormorant Garamond',serif"}}>›</button>
+      </div>
+      {activeGuide&&<GuideModal guide={activeGuide} onClose={()=>setActiveGuide(null)}/>}
+    </div>
+  );
+}
+
+function MobileAbout(){
+  return(
+    <div style={{background:"#2A2420",padding:"60px 28px"}}>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:12}}>About</div>
+      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 20px"}}>Josh & Bella</h2>
+      <div style={{width:"100%",aspectRatio:"4/3",marginBottom:24,overflow:"hidden"}}>
+        <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
+      </div>
+      <div style={{width:36,height:1,background:"#C8956C",marginBottom:20}}/>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"rgba(253,251,248,0.75)",lineHeight:1.85}}>We started Saeiris because we believed travel deserved more than an itinerary — it deserved a memory you could hold. Every trip we plan is documented on a 1976 Canon AE-1, developed by hand, and pinned to our PhotoGlobe.</p>
+    </div>
+  );
+}
+
+function MobileGetStarted(){
+  const[form,setForm]=useState({name:"",email:"",destination:"",message:""});
+  const[status,setStatus]=useState("");
+  const font="'Cormorant Garamond',serif";
+  const inp={width:"100%",padding:"12px 0",borderBottom:"1px solid rgba(200,149,108,0.3)",background:"transparent",fontFamily:font,fontSize:15,color:"#2A2420",border:"none",borderBottom:"1px solid rgba(42,36,32,0.2)",marginBottom:16,outline:"none"};
+  const submit=async(e)=>{
+    e.preventDefault();
+    setStatus("sending");
+    try{
+      const {supabase}=await import("./supabase");
+      const{error}=await supabase.functions.invoke("send-inquiry",{body:form});
+      setStatus(error?"error":"sent");
+    }catch{setStatus("error");}
+  };
+  return(
+    <div style={{background:"#FDFBF8",padding:"60px 28px"}}>
+      <div style={{fontFamily:font,fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>Get Started</div>
+      <h2 style={{fontFamily:font,fontSize:32,fontWeight:300,color:"#2A2420",lineHeight:1.2,margin:"0 0 8px"}}>Plan Your<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Journey.</span></h2>
+      <div style={{width:36,height:1,background:"#C8956C",margin:"16px 0 28px"}}/>
+      {status==="sent"?
+        <div style={{fontFamily:font,fontSize:16,color:"#C8956C",lineHeight:1.8}}>Thank you — we'll be in touch within 48 hours.</div>:
+        <form onSubmit={submit}>
+          <input style={inp} placeholder="Your Name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} required/>
+          <input style={inp} placeholder="Email Address" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} required/>
+          <input style={inp} placeholder="Dream Destination" value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))}/>
+          <textarea style={{...inp,resize:"none",height:100}} placeholder="Tell us about your trip..." value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))}/>
+          <div style={{fontFamily:font,fontSize:11,color:"#8A7A68",marginBottom:20,letterSpacing:"0.05em"}}>Flat planning fee: $350</div>
+          <button type="submit" disabled={status==="sending"} style={{width:"100%",padding:"16px",background:"#2A2420",color:"#C8956C",fontFamily:font,fontSize:12,letterSpacing:"0.15em",textTransform:"uppercase",border:"none",cursor:"pointer"}}>
+            {status==="sending"?"Sending...":"Send Inquiry"}
+          </button>
+          {status==="error"&&<div style={{fontFamily:font,fontSize:13,color:"#C8956C",marginTop:12}}>Something went wrong — please email hello@saeiris.com directly.</div>}
+        </form>
+      }
+    </div>
   );
 }
 
@@ -1284,36 +1492,6 @@ export default function App(){
 
   useEffect(()=>{
     if(page!=="home")return;
-    const el=containerRef.current;if(!el)return;
-    let startY=0;
-    let startX=0;
-    const onTS=(e)=>{startY=e.touches[0].clientY; startX=e.touches[0].clientX;};
-    const onTE=(e)=>{
-      if(isScrolling.current)return;
-      const dy=startY-e.changedTouches[0].clientY;
-      const dx=startX-e.changedTouches[0].clientX;
-      if(Math.abs(dx)>Math.abs(dy))return;
-      if(Math.abs(dy)>60){
-        if(dy>0)scrollToSection(activeSection+1);
-        else scrollToSection(activeSection-1);
-      }
-    };
-    el.addEventListener("touchstart",onTS,{passive:true});
-    el.addEventListener("touchend",onTE,{passive:true});
-    return()=>{el.removeEventListener("touchstart",onTS);el.removeEventListener("touchend",onTE);};
-  },[page,activeSection,scrollToSection]);
-
-  useEffect(()=>{
-    const onResize=()=>{
-      const el=containerRef.current;
-      if(el)el.scrollTop=activeSection*window.innerHeight;
-    };
-    window.addEventListener("resize",onResize);
-    return()=>window.removeEventListener("resize",onResize);
-  },[activeSection]);
-
-  useEffect(()=>{
-    if(page!=="home")return;
     const onKey=(e)=>{
       if(e.key==="ArrowDown"||e.key===" "){e.preventDefault();scrollToSection(activeSection+1);}
       if(e.key==="ArrowUp"){e.preventDefault();scrollToSection(activeSection-1);}
@@ -1326,11 +1504,20 @@ export default function App(){
     return <PhotoGlobe onNavigate={(p)=>setPage(p||"home")}/>;
   }
 
+  if(isMobile){
+    return(
+      <div style={{width:"100vw",height:"100%",fontFamily:"'Cormorant Garamond',serif"}}>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}.wall-texture{background-color:#F5F0EB;background-image:url('/wall-texture.png');background-size:400px 400px;background-repeat:repeat;}`}</style>
+        <MobileApp onGlobe={()=>setPage("globe")}/>
+      </div>
+    );
+  }
+
   return(
     <div style={{width:"100vw",height:"100vh",overflow:"hidden",fontFamily:"'Cormorant Garamond',serif"}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}`}</style>
-      {!isMobile&&<SectionNav active={activeSection} onNav={scrollToSection}/>}
-      {!isMobile&&<GlobeTab onClick={()=>setPage("globe")} dark={DARK_SECTIONS[activeSection]}/>}
+      <SectionNav active={activeSection} onNav={scrollToSection}/>
+      <GlobeTab onClick={()=>setPage("globe")} dark={DARK_SECTIONS[activeSection]}/>
       <div ref={containerRef} style={{width:"100vw",height:"100vh",overflow:"hidden"}}>
         <HeroSection onGlobe={()=>setPage("globe")}/>
         <HowItWorksSection/>
