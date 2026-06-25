@@ -669,6 +669,28 @@ const GUIDE_SLIDES = {
 function GuideModalMobile({guide,onClose}){
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
+
+  useEffect(()=>{
+    // iOS Safari scroll lock — freeze page at current position
+    const scrollY=window.scrollY;
+    const pageEl=document.getElementById('mobile-page');
+    if(pageEl){
+      pageEl.style.position='fixed';
+      pageEl.style.top=`-${scrollY}px`;
+      pageEl.style.width='100%';
+      pageEl.style.overflow='hidden';
+    }
+    return()=>{
+      if(pageEl){
+        pageEl.style.position='';
+        pageEl.style.top='';
+        pageEl.style.width='';
+        pageEl.style.overflow='';
+        window.scrollTo(0,scrollY);
+      }
+    };
+  },[]);
+
   if(!guide)return null;
   const cityData=GUIDE_SLIDES[guide.city];
   const slides=cityData?cityData.slides:[];
@@ -680,11 +702,19 @@ function GuideModalMobile({guide,onClose}){
   if(!curr)return null;
 
   return(
-    <div
-      style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,background:"rgba(20,18,15,0.6)",display:"flex",alignItems:"center",justifyContent:"center"}}
-      onTouchMove={(e)=>e.preventDefault()}
-    >
-      <div style={{width:"92vw",height:"88%",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
+    <div style={{
+      position:"fixed",
+      top:0,left:0,right:0,bottom:0,
+      width:"100vw",
+      height:"100vh",
+      zIndex:9999,
+      background:"rgba(20,18,15,0.65)",
+      display:"flex",
+      alignItems:"center",
+      justifyContent:"center",
+      WebkitOverflowScrolling:"touch",
+    }}>
+      <div style={{width:"92vw",height:"86vh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}}>
 
         {/* Photo — 35% */}
         <div style={{height:"35%",position:"relative",flexShrink:0}}>
@@ -1261,7 +1291,7 @@ function GetStartedSection(){
 // ══════════════════════════════════════════════════════════════
 function MobileApp({onGlobe}){
   return(
-    <div style={{width:"100vw",fontFamily:"'Cormorant Garamond',serif",backgroundImage:"url('/wall-texture.png')",backgroundSize:"100% auto",backgroundRepeat:"repeat-y",backgroundPosition:"top center",overflowX:"hidden",position:"relative"}}>
+    <div id="mobile-page" style={{width:"100vw",fontFamily:"'Cormorant Garamond',serif",backgroundImage:"url('/wall-texture.png')",backgroundSize:"100% auto",backgroundRepeat:"repeat-y",backgroundPosition:"top center",overflowX:"hidden",position:"relative"}}>
       <div style={{position:"relative",zIndex:1}}>
 
       {/* HERO — full screen with bottom fade */}
@@ -1493,7 +1523,7 @@ export default function App(){
   if(isMobile){
     return(
       <div style={{width:"100vw",height:"100%",fontFamily:"'Cormorant Garamond',serif"}}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html,body{height:-webkit-fill-available;}`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html{height:-webkit-fill-available;}body{min-height:-webkit-fill-available;}`}</style>
         <MobileApp onGlobe={()=>setPage("globe")}/>
       </div>
     );
