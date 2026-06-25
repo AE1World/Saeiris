@@ -670,20 +670,15 @@ function GuideModalMobile({guide,onClose}){
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
   useEffect(()=>{
-    const el=document.documentElement;
-    const body=document.body;
-    const prevElOverflow=el.style.overflow;
-    const prevBodyOverflow=body.style.overflow;
-    el.style.overflow='hidden';
-    body.style.overflow='hidden';
-    // Also find and lock any scrolling parent
-    const scrollParent=document.querySelector('[style*="overflow: scroll"], [style*="overflow:scroll"]');
-    let prevScrollOverflow='';
-    if(scrollParent){prevScrollOverflow=scrollParent.style.overflowY;scrollParent.style.overflowY='hidden';}
+    // Lock all scrolling on iOS Safari
+    const preventDefault=(e)=>e.preventDefault();
+    document.addEventListener('touchmove',preventDefault,{passive:false});
+    document.body.style.overflow='hidden';
+    document.documentElement.style.overflow='hidden';
     return()=>{
-      el.style.overflow=prevElOverflow;
-      body.style.overflow=prevBodyOverflow;
-      if(scrollParent)scrollParent.style.overflowY=prevScrollOverflow;
+      document.removeEventListener('touchmove',preventDefault);
+      document.body.style.overflow='';
+      document.documentElement.style.overflow='';
     };
   },[]);
   if(!guide)return null;
@@ -698,7 +693,7 @@ function GuideModalMobile({guide,onClose}){
 
   return(
     <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(20,18,15,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{width:"90vw",height:"90vh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
+      <div style={{width:"92vw",height:"88svh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
 
         {/* Photo — 35% */}
         <div style={{height:"35%",position:"relative",flexShrink:0}}>
