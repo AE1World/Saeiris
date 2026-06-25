@@ -669,18 +669,6 @@ const GUIDE_SLIDES = {
 function GuideModalMobile({guide,onClose}){
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
-  useEffect(()=>{
-    // Lock all scrolling on iOS Safari
-    const preventDefault=(e)=>e.preventDefault();
-    document.addEventListener('touchmove',preventDefault,{passive:false});
-    document.body.style.overflow='hidden';
-    document.documentElement.style.overflow='hidden';
-    return()=>{
-      document.removeEventListener('touchmove',preventDefault);
-      document.body.style.overflow='';
-      document.documentElement.style.overflow='';
-    };
-  },[]);
   if(!guide)return null;
   const cityData=GUIDE_SLIDES[guide.city];
   const slides=cityData?cityData.slides:[];
@@ -692,8 +680,11 @@ function GuideModalMobile({guide,onClose}){
   if(!curr)return null;
 
   return(
-    <div style={{position:"fixed",inset:0,zIndex:200,background:"rgba(20,18,15,0.5)",display:"flex",alignItems:"center",justifyContent:"center"}}>
-      <div style={{width:"92vw",height:"88svh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
+    <div
+      style={{position:"fixed",top:0,left:0,right:0,bottom:0,zIndex:200,background:"rgba(20,18,15,0.6)",display:"flex",alignItems:"center",justifyContent:"center"}}
+      onTouchMove={(e)=>e.preventDefault()}
+    >
+      <div style={{width:"92vw",height:"88%",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.4)"}}>
 
         {/* Photo — 35% */}
         <div style={{height:"35%",position:"relative",flexShrink:0}}>
@@ -1502,7 +1493,7 @@ export default function App(){
   if(isMobile){
     return(
       <div style={{width:"100vw",height:"100%",fontFamily:"'Cormorant Garamond',serif"}}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}.wall-texture{background-color:#F5F0EB;background-image:url('/wall-texture.png');background-size:400px 400px;background-repeat:repeat;}`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html,body{height:-webkit-fill-available;}`}</style>
         <MobileApp onGlobe={()=>setPage("globe")}/>
       </div>
     );
