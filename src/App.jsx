@@ -1346,19 +1346,21 @@ function MobileApp({onGlobe}){
       {/* TRAVEL GUIDES */}
       <MobileTravelGuides onGlobe={onGlobe}/>
 
-      {/* ABOUT */}
-      <MobileAbout/>
+      {/* GLOBE CTA — cream background */}
+      <div style={{padding:"60px 28px",textAlign:"center"}}>
+        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:12}}>PhotoGlobe</div>
+        <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:300,color:"#2A2420",lineHeight:1.2,margin:"0 0 6px"}}>See the world</h2>
+        <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:34,fontWeight:300,color:"#2A2420",lineHeight:1.2,margin:"0 0 20px",fontStyle:"italic"}}><span style={{color:"#C8956C"}}>through their lens.</span></h2>
+        <div style={{width:36,height:1,background:"#C8956C",margin:"0 auto 20px"}}/>
+        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"#6A5A48",lineHeight:1.85,margin:"0 0 32px"}}>Every trip we plan gets pinned to the PhotoGlobe — a living map of real travel moments captured on real film.</p>
+        <button onClick={onGlobe} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:11,letterSpacing:"0.18em",textTransform:"uppercase",color:"#FDFBF8",background:"#2A2420",border:"none",padding:"14px 36px",cursor:"pointer"}}>Explore the Globe</button>
+      </div>
 
       {/* GET STARTED */}
       <MobileGetStarted/>
 
-      {/* GLOBE CTA */}
-      <div style={{background:"#2A2420",padding:"60px 28px",textAlign:"center"}}>
-        <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:12}}>PhotoGlobe</div>
-        <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 16px"}}>See the world through<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>their lens.</span></h2>
-        <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,color:"rgba(253,251,248,0.6)",lineHeight:1.8,margin:"0 0 28px"}}>Every trip we plan gets pinned to the globe. Browse real photos from real travelers — captured on film.</p>
-        <button onClick={onGlobe} style={{fontFamily:"'Cormorant Garamond',serif",fontSize:12,letterSpacing:"0.15em",textTransform:"uppercase",color:"#2A2420",background:"#C8956C",border:"none",padding:"14px 32px",cursor:"pointer"}}>Explore the Globe</button>
-      </div>
+      {/* ABOUT */}
+      <MobileAbout/>
 
       </div>{/* end zIndex wrapper */}
     </div>
@@ -1421,14 +1423,16 @@ function MobileTravelGuides({onGlobe}){
 
 function MobileAbout(){
   return(
-    <div style={{background:"#2A2420",padding:"60px 28px"}}>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:12}}>About</div>
-      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 20px"}}>Josh & Bella</h2>
-      <div style={{width:"100%",aspectRatio:"4/3",marginBottom:24,overflow:"hidden"}}>
+    <div style={{padding:"60px 28px",background:"#2A2420"}}>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:8}}>Our Story</div>
+      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 4px"}}>Built on a love of</h2>
+      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.2,margin:"0 0 24px"}}>travel & film</h2>
+      <div style={{width:"100%",aspectRatio:"4/3",marginBottom:24,overflow:"hidden",border:"1px solid rgba(200,149,108,0.2)"}}>
         <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
       </div>
       <div style={{width:36,height:1,background:"#C8956C",marginBottom:20}}/>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"rgba(253,251,248,0.75)",lineHeight:1.85}}>We started Saeiris because we believed travel deserved more than an itinerary — it deserved a memory you could hold. Every trip we plan is documented on a 1976 Canon AE-1, developed by hand, and pinned to our PhotoGlobe.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"rgba(253,251,248,0.75)",lineHeight:1.85,margin:"0 0 16px"}}>We're Josh and Bella — a couple who fell in love with the world through the lens of a 1976 Canon AE-1. What started as a hobby on our first trip to Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"rgba(253,251,248,0.75)",lineHeight:1.85}}>Saeiris was born from the belief that the best trips aren't the most expensive — they're the most intentional. We plan every detail so you can be present, camera in hand, capturing moments the way they were meant to be captured.</p>
     </div>
   );
 }
@@ -1437,7 +1441,7 @@ function MobileGetStarted(){
   const[form,setForm]=useState({name:"",email:"",destination:"",message:""});
   const[status,setStatus]=useState("");
   const font="'Cormorant Garamond',serif";
-  const inp={width:"100%",padding:"12px 0",borderBottom:"1px solid rgba(200,149,108,0.3)",background:"transparent",fontFamily:font,fontSize:15,color:"#2A2420",border:"none",borderBottom:"1px solid rgba(42,36,32,0.2)",marginBottom:16,outline:"none"};
+  const inp={width:"100%",padding:"12px 0",background:"transparent",fontFamily:font,fontSize:15,color:"#2A2420",border:"none",borderBottom:"1px solid rgba(42,36,32,0.2)",marginBottom:16,outline:"none"};
   const submit=async(e)=>{
     e.preventDefault();
     setStatus("sending");
@@ -1448,9 +1452,10 @@ function MobileGetStarted(){
     }catch{setStatus("error");}
   };
   return(
-    <div style={{background:"#FDFBF8",padding:"60px 28px"}}>
+    <div style={{padding:"60px 28px"}}>
       <div style={{fontFamily:font,fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>Get Started</div>
-      <h2 style={{fontFamily:font,fontSize:32,fontWeight:300,color:"#2A2420",lineHeight:1.2,margin:"0 0 8px"}}>Plan Your<br/><span style={{fontStyle:"italic",color:"#C8956C"}}>Journey.</span></h2>
+      <h2 style={{fontFamily:font,fontSize:32,fontWeight:300,color:"#2A2420",lineHeight:1.2,margin:"0 0 4px"}}>Plan Your</h2>
+      <h2 style={{fontFamily:font,fontSize:32,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.2,margin:"0 0 0"}}>Journey.</h2>
       <div style={{width:36,height:1,background:"#C8956C",margin:"16px 0 28px"}}/>
       {status==="sent"?
         <div style={{fontFamily:font,fontSize:16,color:"#C8956C",lineHeight:1.8}}>Thank you — we'll be in touch within 48 hours.</div>:
