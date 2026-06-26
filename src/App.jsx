@@ -669,6 +669,15 @@ const GUIDE_SLIDES = {
 function GuideModalMobile({guide,onClose}){
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
+  useEffect(()=>{
+    const prev=document.body.style.background;
+    document.body.style.background='rgba(20,18,15,0.65)';
+    document.documentElement.style.background='rgba(20,18,15,0.65)';
+    return()=>{
+      document.body.style.background=prev;
+      document.documentElement.style.background='';
+    };
+  },[]);
 
   useEffect(()=>{
     // iOS Safari scroll lock — freeze page at current position
@@ -714,7 +723,7 @@ function GuideModalMobile({guide,onClose}){
       justifyContent:"center",
       WebkitOverflowScrolling:"touch",
     }}>
-      <div style={{width:"92vw",height:"86vh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:16,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}}>
+      <div style={{width:"92vw",height:"92vh",display:"flex",flexDirection:"column",background:"#FDFBF8",borderRadius:12,overflow:"hidden",boxShadow:"0 20px 60px rgba(0,0,0,0.5)"}}>
 
         {/* Photo — 35% */}
         <div style={{height:"35%",position:"relative",flexShrink:0}}>
@@ -1423,16 +1432,16 @@ function MobileTravelGuides({onGlobe}){
 
 function MobileAbout(){
   return(
-    <div style={{padding:"60px 28px calc(60px + env(safe-area-inset-bottom))",background:"#2A2420"}}>
+    <div style={{padding:"60px 28px"}}>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>Our Story</div>
-      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 4px"}}>Built on a love of</h2>
+      <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#2A2420",lineHeight:1.2,margin:"0 0 4px"}}>Built on a love of</h2>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.2,margin:"0 0 24px"}}>travel & film</h2>
       <div style={{width:"100%",aspectRatio:"4/3",marginBottom:24,overflow:"hidden",border:"1px solid rgba(200,149,108,0.15)"}}>
         <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
       </div>
       <div style={{width:36,height:1,background:"#C8956C",marginBottom:20}}/>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"rgba(253,251,248,0.75)",lineHeight:1.85,margin:"0 0 16px"}}>We're Josh and Bella — a couple who fell in love with the world through the lens of a 1976 Canon AE-1. What started as a hobby on our first trip to Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.</p>
-      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"rgba(253,251,248,0.75)",lineHeight:1.85}}>Saeiris was born from the belief that the best trips aren't the most expensive — they're the most intentional. We plan every detail so you can be present, camera in hand, capturing moments the way they were meant to be captured.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"#5A4A38",lineHeight:1.85,margin:"0 0 16px"}}>We're Josh and Bella — a couple who fell in love with the world through the lens of a 1976 Canon AE-1. What started as a hobby on our first trip to Tuscany turned into an obsession: analog photography, intentional travel, and the irreplaceable feeling of holding a developed roll of film from a trip you'll never forget.</p>
+      <p style={{fontFamily:"'Cormorant Garamond',serif",fontSize:15,color:"#5A4A38",lineHeight:1.85}}>Saeiris was born from the belief that the best trips aren't the most expensive — they're the most intentional. We plan every detail so you can be present, camera in hand, capturing moments the way they were meant to be captured.</p>
     </div>
   );
 }
@@ -1528,7 +1537,7 @@ export default function App(){
   if(isMobile){
     return(
       <div style={{width:"100vw",height:"100%",fontFamily:"'Cormorant Garamond',serif"}}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html{height:-webkit-fill-available;}body{min-height:-webkit-fill-available;}:root{--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);}`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html{height:-webkit-fill-available;background:#2A2420;}body{min-height:-webkit-fill-available;background:#2A2420;}`}</style>
         <MobileApp onGlobe={()=>setPage("globe")}/>
       </div>
     );
