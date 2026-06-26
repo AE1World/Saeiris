@@ -1423,11 +1423,11 @@ function MobileTravelGuides({onGlobe}){
 
 function MobileAbout(){
   return(
-    <div style={{padding:"60px 28px",background:"#2A2420"}}>
-      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:8}}>Our Story</div>
+    <div style={{padding:"60px 28px calc(60px + env(safe-area-inset-bottom))",background:"#2A2420"}}>
+      <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>Our Story</div>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 4px"}}>Built on a love of</h2>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.2,margin:"0 0 24px"}}>travel & film</h2>
-      <div style={{width:"100%",aspectRatio:"4/3",marginBottom:24,overflow:"hidden",border:"1px solid rgba(200,149,108,0.2)"}}>
+      <div style={{width:"100%",aspectRatio:"4/3",marginBottom:24,overflow:"hidden",border:"1px solid rgba(200,149,108,0.15)"}}>
         <img src="/aboutphoto.png" alt="Josh and Bella" style={{width:"100%",height:"100%",objectFit:"cover",objectPosition:"center 30%"}}/>
       </div>
       <div style={{width:36,height:1,background:"#C8956C",marginBottom:20}}/>
@@ -1528,7 +1528,7 @@ export default function App(){
   if(isMobile){
     return(
       <div style={{width:"100vw",height:"100%",fontFamily:"'Cormorant Garamond',serif"}}>
-        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html{height:-webkit-fill-available;}body{min-height:-webkit-fill-available;}`}</style>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap');*{box-sizing:border-box;margin:0;padding:0}::selection{background:rgba(200,149,108,0.3);color:#2A2420}::-webkit-scrollbar{display:none}input::placeholder,textarea::placeholder{color:#A89A88}input:focus,textarea:focus{outline:none}html{height:-webkit-fill-available;}body{min-height:-webkit-fill-available;}:root{--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);}`}</style>
         <MobileApp onGlobe={()=>setPage("globe")}/>
       </div>
     );
