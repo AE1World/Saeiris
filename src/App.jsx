@@ -6,6 +6,42 @@ const isMobile = window.innerWidth < 768;
 const SECTIONS = ["Home","How It Works","Travel Guides","About","Get Started"];
 const DARK_SECTIONS = [false,false,false,true,false];
 
+// iOS 26 Safari samples the document background-color to tint its chrome. While a
+// fullscreen modal is open we recolor the root to a dim tone so the status-bar and
+// URL-bar regions read as part of the dimmed backdrop instead of falling back to white.
+// Also freezes the page behind the modal (fixed-body technique) so it can't scroll.
+function useMobileModalChrome(active){
+  useEffect(()=>{
+    if(!active||!isMobile)return;
+    const DIM="#141210";
+    const html=document.documentElement,body=document.body;
+    const pageEl=document.getElementById("mobile-page");
+    const scrollY=window.scrollY;
+    const prevHtml=html.style.backgroundColor,prevBody=body.style.backgroundColor;
+    html.style.backgroundColor=DIM;
+    body.style.backgroundColor=DIM;
+    if(pageEl){
+      pageEl.style.position="fixed";
+      pageEl.style.top=`-${scrollY}px`;
+      pageEl.style.width="100%";
+      pageEl.style.overflow="hidden";
+    }
+    return()=>{
+      html.style.backgroundColor=prevHtml;
+      body.style.backgroundColor=prevBody;
+      if(pageEl){
+        pageEl.style.position="";
+        pageEl.style.top="";
+        pageEl.style.width="";
+        pageEl.style.overflow="";
+        window.scrollTo(0,scrollY);
+      }
+      // re-run the scroll-driven tint so the chrome returns to cream/brown
+      requestAnimationFrame(()=>window.dispatchEvent(new Event("scroll")));
+    };
+  },[active]);
+}
+
 function SectionNav({active,onNav}){
   const isDark=DARK_SECTIONS[active];
   const accent="#C8956C";
@@ -95,6 +131,7 @@ function HeroSection({onGlobe}){
 // SECTION 2: HOW IT WORKS
 // ══════════════════════════════════════════════════════════════
 function ServiceModal({service,onClose}){
+  useMobileModalChrome(!!service);
   if(!service)return null;
   return(
     <div style={{position:"fixed",inset:0,zIndex:200,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(20,18,15,0.4)",backdropFilter:"blur(10px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
@@ -670,26 +707,8 @@ function GuideModalMobile({guide,onClose}){
   const[slide,setSlide]=useState(0);
   useEffect(()=>{setSlide(0);},[guide]);
 
-  useEffect(()=>{
-    // iOS Safari scroll lock — freeze page at current position
-    const scrollY=window.scrollY;
-    const pageEl=document.getElementById('mobile-page');
-    if(pageEl){
-      pageEl.style.position='fixed';
-      pageEl.style.top=`-${scrollY}px`;
-      pageEl.style.width='100%';
-      pageEl.style.overflow='hidden';
-    }
-    return()=>{
-      if(pageEl){
-        pageEl.style.position='';
-        pageEl.style.top='';
-        pageEl.style.width='';
-        pageEl.style.overflow='';
-        window.scrollTo(0,scrollY);
-      }
-    };
-  },[]);
+  // iOS Safari scroll lock + chrome recolor (removes the white bands above/below the modal)
+  useMobileModalChrome(!!guide);
 
   if(!guide)return null;
   const cityData=GUIDE_SLIDES[guide.city];
@@ -1290,6 +1309,31 @@ function GetStartedSection(){
 // MOBILE LONG-SCROLL LAYOUT
 // ══════════════════════════════════════════════════════════════
 function MobileApp({onGlobe}){
+  // iOS 26 Safari tints its chrome from the document background-color. Since the page is
+  // cream at the top but the About footer is brown, swap the root color on scroll so the
+  // status bar / URL bar match whichever section is at the edges (and so overscroll never
+  // exposes white). Brown kicks in once About reaches the lower half of the viewport.
+  useEffect(()=>{
+    const CREAM="#F0EBE6",BROWN="#2A2420";
+    const setTint=(c)=>{
+      document.documentElement.style.backgroundColor=c;
+      document.body.style.backgroundColor=c;
+    };
+    const onScroll=()=>{
+      const about=document.getElementById("mobile-about");
+      if(!about){setTint(CREAM);return;}
+      const enteredBrown=about.getBoundingClientRect().top<window.innerHeight*0.5;
+      setTint(enteredBrown?BROWN:CREAM);
+    };
+    onScroll();
+    window.addEventListener("scroll",onScroll,{passive:true});
+    window.addEventListener("resize",onScroll);
+    return()=>{
+      window.removeEventListener("scroll",onScroll);
+      window.removeEventListener("resize",onScroll);
+    };
+  },[]);
+
   return(
     <div id="mobile-page" style={{width:"100vw",fontFamily:"'Cormorant Garamond',serif",backgroundImage:"url('/wall-texture.png')",backgroundSize:"100% auto",backgroundRepeat:"repeat-y",backgroundPosition:"top center",overflowX:"hidden",position:"relative"}}>
       <div style={{position:"relative",zIndex:1}}>
@@ -1423,7 +1467,7 @@ function MobileTravelGuides({onGlobe}){
 
 function MobileAbout(){
   return(
-    <div style={{padding:"60px 28px 100px",background:"#2A2420"}}>
+    <div id="mobile-about" style={{padding:"60px 28px 100px",background:"#2A2420"}}>
       <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:10,letterSpacing:"0.25em",textTransform:"uppercase",color:"#C8956C",marginBottom:10}}>Our Story</div>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#FDFBF8",lineHeight:1.2,margin:"0 0 4px"}}>Built on a love of</h2>
       <h2 style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontWeight:300,color:"#C8956C",fontStyle:"italic",lineHeight:1.2,margin:"0 0 24px"}}>travel & film</h2>
