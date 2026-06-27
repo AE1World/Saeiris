@@ -6,30 +6,40 @@ const isMobile = window.innerWidth < 768;
 const SECTIONS = ["Home","How It Works","Travel Guides","About","Get Started"];
 const DARK_SECTIONS = [false,false,false,true,false];
 
-// iOS 26 Safari samples the document background-color to tint its chrome. While a
-// fullscreen modal is open we recolor the root to a dim tone so the status-bar and
-// URL-bar regions read as part of the dimmed backdrop instead of falling back to white.
-// Also freezes the page behind the modal (fixed-body technique) so it can't scroll.
+// iOS 26 won't let a fixed overlay paint behind the status bar / URL bar (known bug,
+// fixed only for native <dialog> in 26.2). So while a fullscreen modal is open we dim
+// the layers that DO render there — html, body, and #mobile-page itself, whose cream wall
+// texture is what was leaking through as the white strips. We also freeze the page behind
+// the modal (fixed-body technique) so it can't scroll. DIM matches the dimmed gutters.
 function useMobileModalChrome(active){
   useEffect(()=>{
     if(!active||!isMobile)return;
-    const DIM="#141210";
+    const DIM="#4C4A47";
     const html=document.documentElement,body=document.body;
     const pageEl=document.getElementById("mobile-page");
     const scrollY=window.scrollY;
-    const prevHtml=html.style.backgroundColor,prevBody=body.style.backgroundColor;
+    const prev={
+      html:html.style.backgroundColor,
+      body:body.style.backgroundColor,
+      pageBg:pageEl?pageEl.style.backgroundColor:"",
+      pageImg:pageEl?pageEl.style.backgroundImage:"",
+    };
     html.style.backgroundColor=DIM;
     body.style.backgroundColor=DIM;
     if(pageEl){
+      pageEl.style.backgroundColor=DIM;
+      pageEl.style.backgroundImage="none";   // reveal the dim color in the chrome strips
       pageEl.style.position="fixed";
       pageEl.style.top=`-${scrollY}px`;
       pageEl.style.width="100%";
       pageEl.style.overflow="hidden";
     }
     return()=>{
-      html.style.backgroundColor=prevHtml;
-      body.style.backgroundColor=prevBody;
+      html.style.backgroundColor=prev.html;
+      body.style.backgroundColor=prev.body;
       if(pageEl){
+        pageEl.style.backgroundColor=prev.pageBg;
+        pageEl.style.backgroundImage=prev.pageImg;
         pageEl.style.position="";
         pageEl.style.top="";
         pageEl.style.width="";
@@ -1314,7 +1324,7 @@ function MobileApp({onGlobe}){
   // status bar / URL bar match whichever section is at the edges (and so overscroll never
   // exposes white). Brown kicks in once About reaches the lower half of the viewport.
   useEffect(()=>{
-    const CREAM="#F0EBE6",BROWN="#2A2420";
+    const CREAM="#E8DFD5",BROWN="#2A2420";
     const setTint=(c)=>{
       document.documentElement.style.backgroundColor=c;
       document.body.style.backgroundColor=c;
@@ -1341,6 +1351,10 @@ function MobileApp({onGlobe}){
       {/* HERO — full screen with bottom fade */}
       <div style={{position:"relative",width:"100vw",height:"100svh",flexShrink:0}}>
         <div style={{position:"absolute",inset:0,backgroundImage:"url('/hero-mobile.png')",backgroundSize:"cover",backgroundPosition:"center"}}/>
+        {/* Top fade — paints the exact status-bar chrome color (#E8DFD5) at the very top of
+            the image and dissolves it into the texture, so there is no hard line between the
+            Safari status bar and the hero. Same hue throughout — only opacity changes. */}
+        <div style={{position:"absolute",top:0,left:0,right:0,height:"calc(env(safe-area-inset-top, 0px) + 140px)",background:"linear-gradient(to bottom, #E8DFD5 0%, #E8DFD5 38%, rgba(232,223,213,0.55) 64%, rgba(232,223,213,0) 100%)",pointerEvents:"none",zIndex:2}}/>
         {/* Bottom fade into wall — starts higher */}
         <div style={{position:"absolute",bottom:0,left:0,right:0,height:"45%",background:"linear-gradient(to bottom,transparent 0%,rgba(240,235,230,0.6) 50%,#F0EBE6 100%)"}}/>
         {/* Logo */}
