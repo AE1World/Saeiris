@@ -1496,7 +1496,7 @@ function MobileAbout(){
 }
 
 function MobileGetStarted(){
-  const[form,setForm]=useState({name:"",email:"",destination:"",message:""});
+  const[form,setForm]=useState({name:"",email:"",destination:"",travelers:"",dates:"",message:""});
   const[status,setStatus]=useState("");
   const font="'Cormorant Garamond',serif";
   const inp={width:"100%",padding:"12px 0",background:"transparent",fontFamily:font,fontSize:15,color:"#2A2420",border:"none",borderBottom:"1px solid rgba(42,36,32,0.2)",marginBottom:16,outline:"none"};
@@ -1521,6 +1521,8 @@ function MobileGetStarted(){
           <input style={inp} placeholder="Your Name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} required/>
           <input style={inp} placeholder="Email Address" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} required/>
           <input style={inp} placeholder="Dream Destination" value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))}/>
+          <input style={inp} placeholder="Number of Travelers" value={form.travelers} onChange={e=>setForm(f=>({...f,travelers:e.target.value}))}/>
+          <input style={inp} placeholder="Preferred Travel Dates (flexible is fine!)" value={form.dates} onChange={e=>setForm(f=>({...f,dates:e.target.value}))}/>
           <textarea style={{...inp,resize:"none",height:100}} placeholder="Tell us about your trip..." value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))}/>
           <div style={{fontFamily:font,fontSize:11,color:"#8A7A68",marginBottom:20,letterSpacing:"0.05em"}}>Flat planning fee: $350</div>
           <button type="submit" disabled={status==="sending"} style={{width:"100%",padding:"16px",background:"#2A2420",color:"#C8956C",fontFamily:font,fontSize:12,letterSpacing:"0.15em",textTransform:"uppercase",border:"none",cursor:"pointer"}}>
@@ -1572,8 +1574,6 @@ export default function App(){
   useEffect(()=>{
     if(page!=="home")return;
     const onKey=(e)=>{
-      const tag=document.activeElement?.tagName;
-      if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
       if(e.key==="ArrowDown"||e.key===" "){e.preventDefault();scrollToSection(activeSection+1);}
       if(e.key==="ArrowUp"){e.preventDefault();scrollToSection(activeSection-1);}
     };
