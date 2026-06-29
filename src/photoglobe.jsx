@@ -789,6 +789,21 @@ export default function PhotoGlobe({onNavigate}){
     return()=>subscription.unsubscribe();
   },[]);
 
+  // iOS 26 Safari tints its status-bar / URL-bar from the document background-color. While
+  // the globe view is mounted, paint html + body the globe's dark so those strips match and
+  // the page reads full-screen. Restored on unmount (the site's cream tint takes back over).
+  useEffect(()=>{
+    const GLOBE_BG="#1C1C1E";
+    const html=document.documentElement,body=document.body;
+    const prev={html:html.style.backgroundColor,body:body.style.backgroundColor};
+    html.style.backgroundColor=GLOBE_BG;
+    body.style.backgroundColor=GLOBE_BG;
+    return()=>{
+      html.style.backgroundColor=prev.html;
+      body.style.backgroundColor=prev.body;
+    };
+  },[]);
+
   const loadPhotos=useCallback(async()=>{
     const{data,error}=await supabase.from('photos_with_likes').select('*').order('created_at',{ascending:false});
     if(!error&&data)setPhotos(data);
