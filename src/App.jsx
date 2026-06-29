@@ -1572,6 +1572,8 @@ export default function App(){
   useEffect(()=>{
     if(page!=="home")return;
     const onKey=(e)=>{
+      const tag=document.activeElement?.tagName;
+      if(tag==="INPUT"||tag==="TEXTAREA"||tag==="SELECT")return;
       if(e.key==="ArrowDown"||e.key===" "){e.preventDefault();scrollToSection(activeSection+1);}
       if(e.key==="ArrowUp"){e.preventDefault();scrollToSection(activeSection-1);}
     };
