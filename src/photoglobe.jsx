@@ -2,18 +2,19 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
 
 // ══════════════════════════════════════════════════════════════
-// SAEIRIS — PhotoGlobe v5
+// SAEIRIS — PhotoGlobe v6
 // Warm stone theme, Cormorant Garamond, minimal & editorial
+// Mobile: bottom sheet pattern | Desktop: sidebar layout
 // ══════════════════════════════════════════════════════════════
 
 // ── Palette ──
 const C = {
-  bg:       "#FDFBF8",       // warm cream — main background
-  sidebar:  "#F5F0EB",       // slightly warmer sidebar
-  border:   "rgba(200,149,108,0.15)", // gold border
-  accent:   "#C8956C",       // warm gold
-  dark:     "#2A2420",       // near-black
-  muted:    "#8A7A68",       // muted brown
+  bg:       "#FDFBF8",
+  sidebar:  "#F5F0EB",
+  border:   "rgba(200,149,108,0.15)",
+  accent:   "#C8956C",
+  dark:     "#2A2420",
+  muted:    "#8A7A68",
   faint:    "rgba(42,36,32,0.04)",
   error:    "#C0392B",
   font:     "'Cormorant Garamond', serif",
@@ -42,7 +43,7 @@ function AuthModal({onClose,onAuth}){
   const lS={fontSize:10,color:C.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.12em",marginBottom:6,display:"block",fontFamily:C.fontSans};
   return(
     <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(42,36,32,0.4)",backdropFilter:"blur(16px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{width:420,background:C.bg,border:`1px solid ${C.border}`,padding:"40px 36px",boxShadow:"0 40px 100px rgba(42,36,32,0.15)"}}>
+      <div style={{width:420,maxWidth:"calc(100vw - 32px)",background:C.bg,border:`1px solid ${C.border}`,padding:"40px 36px",boxShadow:"0 40px 100px rgba(42,36,32,0.15)"}}>
         <div style={{fontSize:10,letterSpacing:"0.2em",textTransform:"uppercase",color:C.accent,fontFamily:C.font,marginBottom:8}}>SAEIRIS</div>
         <h3 style={{fontSize:28,fontWeight:300,color:C.dark,margin:"0 0 4px",fontFamily:C.font}}>{mode==="login"?"Welcome Back":"Join the Globe"}</h3>
         <p style={{fontSize:14,color:C.muted,margin:"0 0 28px",fontFamily:C.font,lineHeight:1.6}}>{mode==="login"?"Sign in to upload and like photos.":"Create an account to start sharing your world."}</p>
@@ -71,11 +72,11 @@ function AuthModal({onClose,onAuth}){
 }
 
 // ── Globe Canvas ──
-function GlobeCanvas({photos, selectedId, onSelect}){
+function GlobeCanvas({photos, selectedId, onSelect, width, height}){
   const globeRef = useRef();
   const containerRef = useRef();
   const [GlobeComponent, setGlobeComponent] = useState(null);
-  const [dims, setDims] = useState({w: window.innerWidth, h: window.innerHeight});
+  const [dims, setDims] = useState({w: width || window.innerWidth, h: height || window.innerHeight});
 
   useEffect(()=>{
     import('react-globe.gl').then(mod=>{setGlobeComponent(()=>mod.default);});
@@ -190,8 +191,6 @@ function PhotoDetail({photo, onClose, onLike, onDelete, user}){
 
   return(
     <div style={{position:"absolute",top:0,right:0,width:400,height:"100%",background:C.bg,borderLeft:`1px solid ${C.border}`,zIndex:100,display:"flex",flexDirection:"column",animation:"slideIn 0.4s cubic-bezier(0.16,1,0.3,1)",overflowY:"auto",boxShadow:"-8px 0 40px rgba(42,36,32,0.08)"}}>
-
-      {/* Photo header */}
       <div style={{width:"100%",height:240,position:"relative",flexShrink:0,background:photo.image_url?`url(${photo.image_url}) center/cover`:C.sidebar}}>
         {!photo.image_url&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="4"/></svg></div>}
         <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(42,36,32,0.5) 0%,transparent 50%)"}}/>
@@ -199,20 +198,14 @@ function PhotoDetail({photo, onClose, onLike, onDelete, user}){
         {photo.image_url&&<button onClick={()=>setFullscreen(true)} style={{position:"absolute",top:14,right:54,width:32,height:32,borderRadius:"50%",background:"rgba(42,36,32,0.4)",border:"none",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)"}}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></button>}
         {photo.film_type&&<div style={{position:"absolute",top:14,left:14,background:"rgba(200,149,108,0.85)",padding:"4px 10px",fontSize:10,color:"#fff",fontWeight:600,letterSpacing:"0.08em",fontFamily:C.fontSans,backdropFilter:"blur(8px)"}}>{photo.film_type}</div>}
       </div>
-
       <div style={{padding:"20px 24px 32px",flex:1}}>
-        {/* Title + location */}
         <h2 style={{fontSize:24,fontWeight:300,color:C.dark,margin:"0 0 4px",fontFamily:C.font,lineHeight:1.2}}>{photo.title}</h2>
         <div style={{fontSize:13,color:C.muted,fontFamily:C.fontSans,marginBottom:photo.description?12:18}}>{photo.city}, {photo.country} · {timeAgo(photo.created_at||photo.captured_at)}</div>
         {photo.description&&<p style={{fontSize:14,color:"#5A4A38",fontFamily:C.font,lineHeight:1.8,margin:"0 0 18px",fontStyle:"italic"}}>{photo.description}</p>}
-
-        {/* Like button */}
         <button onClick={()=>onLike(photo.id)}
           style={{width:"100%",padding:"10px",border:`1px solid ${photo.user_liked?"rgba(200,149,108,0.4)":C.border}`,background:photo.user_liked?"rgba(200,149,108,0.08)":"transparent",color:photo.user_liked?C.accent:C.muted,fontSize:13,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:16,transition:"all 0.2s",fontFamily:C.fontSans,letterSpacing:"0.06em"}}>
           {photo.user_liked?"♥":"♡"} {photo.like_count||0} {photo.like_count===1?"like":"likes"}
         </button>
-
-        {/* Delete button — only for owner */}
         {isOwner&&(
           confirmDelete?(
             <div style={{marginBottom:16,padding:"14px",background:"rgba(192,57,43,0.04)",border:"1px solid rgba(192,57,43,0.15)"}}>
@@ -232,8 +225,6 @@ function PhotoDetail({photo, onClose, onLike, onDelete, user}){
             </button>
           )
         )}
-
-        {/* Photographer */}
         <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:C.sidebar,marginBottom:20,border:`1px solid ${C.border}`}}>
           <div style={{width:36,height:36,borderRadius:"50%",background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:14,color:"#fff",fontFamily:C.fontSans,flexShrink:0}}>{(photo.photographer_name||"?").charAt(0).toUpperCase()}</div>
           <div>
@@ -241,16 +232,12 @@ function PhotoDetail({photo, onClose, onLike, onDelete, user}){
             <div style={{fontSize:11,color:C.muted,fontFamily:C.fontSans}}>@{photo.photographer_username||"user"}</div>
           </div>
         </div>
-
-        {/* Camera */}
         <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600,marginBottom:8,fontFamily:C.fontSans}}>Camera & Lens</div>
         <div style={{padding:"12px 14px",background:C.sidebar,border:`1px solid ${C.border}`,marginBottom:16}}>
           <div style={{fontSize:16,fontWeight:400,color:C.accent,fontFamily:C.font,marginBottom:2}}>{photo.camera}</div>
           <div style={{fontSize:13,color:C.muted,fontFamily:C.fontSans}}>{photo.lens||"—"}</div>
           {photo.film_type&&<div style={{fontSize:12,color:C.muted,fontFamily:C.fontSans,marginTop:4}}>Film: {photo.film_type}</div>}
         </div>
-
-        {/* Settings */}
         <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600,marginBottom:8,fontFamily:C.fontSans}}>Settings</div>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:16}}>
           {[{l:"Aperture",v:photo.aperture},{l:"Shutter",v:photo.shutter_speed},{l:"ISO",v:photo.iso},{l:"Focal",v:photo.focal_length},{l:"Flash",v:photo.flash},{l:"WB",v:photo.white_balance}].map(b=>
@@ -260,12 +247,9 @@ function PhotoDetail({photo, onClose, onLike, onDelete, user}){
             </div>
           )}
         </div>
-
-        {/* Tags */}
         {photo.tags?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>
           {photo.tags.map(t=><span key={t} style={{padding:"4px 10px",fontSize:11,fontWeight:500,background:"transparent",color:C.muted,border:`1px solid ${C.border}`,fontFamily:C.fontSans}}>#{t}</span>)}
         </div>}
-
         <div style={{fontSize:12,color:C.muted,borderTop:`1px solid ${C.border}`,paddingTop:12,fontFamily:C.fontSans}}>{photo.captured_at?"Captured "+fmtDate(photo.captured_at):"Uploaded "+fmtDate(photo.created_at)}</div>
       </div>
     </div>
@@ -337,7 +321,7 @@ function UploadModal({onClose,onUpload,user}){
   const lS={fontSize:10,color:C.muted,fontWeight:600,textTransform:"uppercase",letterSpacing:"0.1em",marginBottom:6,display:"block",fontFamily:C.fontSans};
   return(
     <div style={{position:"fixed",inset:0,zIndex:1000,display:"flex",alignItems:"center",justifyContent:"center",background:"rgba(42,36,32,0.4)",backdropFilter:"blur(16px)"}} onClick={e=>e.target===e.currentTarget&&onClose()}>
-      <div style={{width:560,maxHeight:"92vh",background:C.bg,border:`1px solid ${C.border}`,overflow:"hidden",boxShadow:"0 40px 100px rgba(42,36,32,0.15)",display:"flex",flexDirection:"column"}}>
+      <div style={{width:560,maxWidth:"calc(100vw - 32px)",maxHeight:"92vh",background:C.bg,border:`1px solid ${C.border}`,overflow:"hidden",boxShadow:"0 40px 100px rgba(42,36,32,0.15)",display:"flex",flexDirection:"column"}}>
         <div style={{padding:"24px 28px 16px",display:"flex",justifyContent:"space-between",alignItems:"center",flexShrink:0,borderBottom:`1px solid ${C.border}`}}>
           <div>
             <div style={{fontSize:10,letterSpacing:"0.2em",textTransform:"uppercase",color:C.accent,fontFamily:C.font,marginBottom:4}}>SAEIRIS</div>
@@ -369,7 +353,7 @@ function UploadModal({onClose,onUpload,user}){
                 </div>}
               </div>
               <label><span style={lS}>Photo Title *</span><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="Name your photo" style={{...iS,marginBottom:14}}/></label>
-              <label><span style={lS}>Description</span><textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Tell the story behind this photo — where you were, what you felt, the moment it captured..." rows={3} style={{...iS,marginBottom:14,resize:"none",lineHeight:1.6}}/></label>
+              <label><span style={lS}>Description</span><textarea value={description} onChange={e=>setDescription(e.target.value)} placeholder="Tell the story behind this photo..." rows={3} style={{...iS,marginBottom:14,resize:"none",lineHeight:1.6}}/></label>
               <label><span style={lS}>Location *</span></label>
               <LocationSearch onSelect={handleLocation} style={iS}/>
               <label><span style={lS}>Tags (comma separated)</span><input value={tags} onChange={e=>setTags(e.target.value)} placeholder="landscape, film, travel" style={{...iS,marginBottom:6}}/></label>
@@ -408,7 +392,7 @@ function UploadModal({onClose,onUpload,user}){
   );
 }
 
-// ── Globe Nav ──
+// ── Globe Nav (desktop) ──
 function GlobeNav({onNavigate}){
   return(
     <div style={{position:"absolute",top:20,right:20,zIndex:40,display:"flex",gap:8}}>
@@ -423,8 +407,372 @@ function GlobeNav({onNavigate}){
   );
 }
 
-// ── Main PhotoGlobe ──
+// ══════════════════════════════════════════════════════════════
+// MOBILE BOTTOM SHEET GLOBE
+// ══════════════════════════════════════════════════════════════
+
+// ── Mobile Photo Detail Sheet ──
+// Slides up over the panel when a photo pin is tapped
+function MobilePhotoDetail({photo, onClose, onLike, onDelete, user}){
+  const[confirmDelete,setConfirmDelete]=useState(false);
+  const[fullscreen,setFullscreen]=useState(false);
+  const isOwner = user && photo.user_id === user.id;
+
+  // Lock scroll when open
+  useEffect(()=>{
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return ()=>{ document.body.style.overflow = prev; };
+  },[]);
+
+  if(fullscreen&&photo.image_url){
+    return(
+      <div style={{position:"fixed",inset:0,zIndex:500,background:"rgba(0,0,0,0.97)",display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setFullscreen(false)}>
+        <img src={photo.image_url} alt={photo.title} style={{maxWidth:"95vw",maxHeight:"95vh",objectFit:"contain"}}/>
+        <button style={{position:"absolute",top:20,right:20,width:44,height:44,borderRadius:"50%",background:"rgba(255,255,255,0.1)",border:"none",color:"#fff",fontSize:22,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>×</button>
+      </div>
+    );
+  }
+
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:400,background:"rgba(42,36,32,0.5)"}}>
+      {/* Sheet */}
+      <div style={{
+        position:"absolute",bottom:0,left:0,right:0,
+        height:"92%",
+        background:C.bg,
+        borderRadius:"18px 18px 0 0",
+        display:"flex",flexDirection:"column",
+        animation:"mobileSheetUp 0.38s cubic-bezier(0.16,1,0.3,1)",
+        overflow:"hidden",
+      }}>
+        {/* Drag handle */}
+        <div style={{display:"flex",justifyContent:"center",padding:"12px 0 6px",flexShrink:0}}>
+          <div style={{width:36,height:4,borderRadius:2,background:"rgba(42,36,32,0.18)"}}/>
+        </div>
+
+        <div style={{overflowY:"auto",flex:1,WebkitOverflowScrolling:"touch"}}>
+          {/* Hero photo */}
+          <div style={{width:"100%",height:220,position:"relative",flexShrink:0,background:photo.image_url?`url(${photo.image_url}) center/cover`:C.sidebar}}>
+            {!photo.image_url&&<div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center"}}><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="12" r="4"/></svg></div>}
+            <div style={{position:"absolute",inset:0,background:"linear-gradient(to top,rgba(42,36,32,0.6) 0%,transparent 55%)"}}/>
+            <button onClick={onClose} style={{position:"absolute",top:14,right:14,width:36,height:36,borderRadius:"50%",background:"rgba(42,36,32,0.45)",border:"none",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:18,backdropFilter:"blur(8px)"}}>×</button>
+            {photo.image_url&&<button onClick={()=>setFullscreen(true)} style={{position:"absolute",top:14,right:58,width:36,height:36,borderRadius:"50%",background:"rgba(42,36,32,0.45)",border:"none",color:"#fff",cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",backdropFilter:"blur(8px)"}}><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 3H5a2 2 0 00-2 2v3m18 0V5a2 2 0 00-2-2h-3m0 18h3a2 2 0 002-2v-3M3 16v3a2 2 0 002 2h3"/></svg></button>}
+            {photo.film_type&&<div style={{position:"absolute",top:14,left:14,background:"rgba(200,149,108,0.9)",padding:"4px 10px",fontSize:10,color:"#fff",fontWeight:600,letterSpacing:"0.08em",fontFamily:C.fontSans,backdropFilter:"blur(8px)"}}>{photo.film_type}</div>}
+          </div>
+
+          <div style={{padding:"20px 20px 40px"}}>
+            <h2 style={{fontSize:26,fontWeight:300,color:C.dark,margin:"0 0 4px",fontFamily:C.font,lineHeight:1.2}}>{photo.title}</h2>
+            <div style={{fontSize:13,color:C.muted,fontFamily:C.fontSans,marginBottom:12}}>{photo.city}, {photo.country} · {timeAgo(photo.created_at||photo.captured_at)}</div>
+            {photo.description&&<p style={{fontSize:15,color:"#5A4A38",fontFamily:C.font,lineHeight:1.8,margin:"0 0 18px",fontStyle:"italic"}}>{photo.description}</p>}
+
+            {/* Like */}
+            <button onClick={()=>onLike(photo.id)}
+              style={{width:"100%",padding:"12px",border:`1px solid ${photo.user_liked?"rgba(200,149,108,0.4)":C.border}`,background:photo.user_liked?"rgba(200,149,108,0.08)":"transparent",color:photo.user_liked?C.accent:C.muted,fontSize:14,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,marginBottom:16,fontFamily:C.fontSans,letterSpacing:"0.06em"}}>
+              {photo.user_liked?"♥":"♡"} {photo.like_count||0} {photo.like_count===1?"like":"likes"}
+            </button>
+
+            {/* Delete */}
+            {isOwner&&(confirmDelete?(
+              <div style={{marginBottom:16,padding:"14px",background:"rgba(192,57,43,0.04)",border:"1px solid rgba(192,57,43,0.15)"}}>
+                <div style={{fontSize:13,color:C.dark,fontFamily:C.font,marginBottom:12,lineHeight:1.5}}>Are you sure? This cannot be undone.</div>
+                <div style={{display:"flex",gap:8}}>
+                  <button onClick={()=>onDelete(photo.id)} style={{flex:1,padding:"11px",background:C.error,color:"#fff",border:"none",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:C.fontSans,letterSpacing:"0.08em",textTransform:"uppercase"}}>Delete</button>
+                  <button onClick={()=>setConfirmDelete(false)} style={{flex:1,padding:"11px",background:"transparent",color:C.muted,border:`1px solid ${C.border}`,fontSize:13,cursor:"pointer",fontFamily:C.fontSans}}>Cancel</button>
+                </div>
+              </div>
+            ):(
+              <button onClick={()=>setConfirmDelete(true)}
+                style={{width:"100%",padding:"11px",border:"1px solid rgba(192,57,43,0.2)",background:"transparent",color:"rgba(192,57,43,0.7)",fontSize:13,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:6,marginBottom:16,fontFamily:C.fontSans,letterSpacing:"0.08em",textTransform:"uppercase"}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                Delete Photo
+              </button>
+            ))}
+
+            {/* Photographer */}
+            <div style={{display:"flex",alignItems:"center",gap:12,padding:"12px 14px",background:C.sidebar,marginBottom:20,border:`1px solid ${C.border}`}}>
+              <div style={{width:40,height:40,borderRadius:"50%",background:C.accent,display:"flex",alignItems:"center",justifyContent:"center",fontWeight:600,fontSize:15,color:"#fff",fontFamily:C.fontSans,flexShrink:0}}>{(photo.photographer_name||"?").charAt(0).toUpperCase()}</div>
+              <div>
+                <div style={{fontSize:16,fontWeight:400,color:C.dark,fontFamily:C.font}}>{photo.photographer_name||"Unknown"}</div>
+                <div style={{fontSize:12,color:C.muted,fontFamily:C.fontSans}}>@{photo.photographer_username||"user"}</div>
+              </div>
+            </div>
+
+            {/* Camera */}
+            <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600,marginBottom:8,fontFamily:C.fontSans}}>Camera & Lens</div>
+            <div style={{padding:"12px 14px",background:C.sidebar,border:`1px solid ${C.border}`,marginBottom:16}}>
+              <div style={{fontSize:17,fontWeight:400,color:C.accent,fontFamily:C.font,marginBottom:2}}>{photo.camera}</div>
+              <div style={{fontSize:13,color:C.muted,fontFamily:C.fontSans}}>{photo.lens||"—"}</div>
+              {photo.film_type&&<div style={{fontSize:12,color:C.muted,fontFamily:C.fontSans,marginTop:4}}>Film: {photo.film_type}</div>}
+            </div>
+
+            {/* Settings grid */}
+            <div style={{fontSize:10,color:C.muted,textTransform:"uppercase",letterSpacing:"0.12em",fontWeight:600,marginBottom:8,fontFamily:C.fontSans}}>Settings</div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:16}}>
+              {[{l:"Aperture",v:photo.aperture},{l:"Shutter",v:photo.shutter_speed},{l:"ISO",v:photo.iso},{l:"Focal",v:photo.focal_length},{l:"Flash",v:photo.flash},{l:"WB",v:photo.white_balance}].map(b=>
+                <div key={b.l} style={{background:C.sidebar,padding:"9px 12px",border:`1px solid ${C.border}`}}>
+                  <span style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:"0.1em",fontWeight:600,fontFamily:C.fontSans}}>{b.l}</span>
+                  <div style={{fontSize:14,color:C.dark,fontWeight:400,fontFamily:C.font,marginTop:2}}>{b.v||"—"}</div>
+                </div>
+              )}
+            </div>
+
+            {photo.tags?.length>0&&<div style={{display:"flex",flexWrap:"wrap",gap:6,marginBottom:16}}>
+              {photo.tags.map(t=><span key={t} style={{padding:"5px 12px",fontSize:12,fontWeight:500,background:"transparent",color:C.muted,border:`1px solid ${C.border}`,fontFamily:C.fontSans}}>#{t}</span>)}
+            </div>}
+
+            <div style={{fontSize:12,color:C.muted,borderTop:`1px solid ${C.border}`,paddingTop:12,fontFamily:C.fontSans}}>{photo.captured_at?"Captured "+fmtDate(photo.captured_at):"Uploaded "+fmtDate(photo.created_at)}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Mobile Globe Layout ──
+function MobilePhotoGlobe({onNavigate, photos, filtered, stats, selectedId, setSelectedId, user, userLikes, search, setSearch, filter, setFilter, allTags, onLike, onDelete, onUploadClick, onAuthClick, loadPhotos}){
+  const[panelOpen,setPanelOpen]=useState(false);
+  const panelRef=useRef(null);
+  const dragStartY=useRef(null);
+  const dragStartScroll=useRef(null);
+
+  const sel=filtered.find(p=>p.id===selectedId);
+
+  // When a pin is tapped, open the photo detail sheet
+  const handlePinSelect=(id)=>{
+    setSelectedId(selectedId===id?null:id);
+    if(id&&id!==selectedId){
+      // Don't auto-open panel — show detail sheet directly
+    }
+  };
+
+  // Touch drag to close panel
+  const handleDragStart=(e)=>{
+    dragStartY.current=e.touches[0].clientY;
+    dragStartScroll.current=panelRef.current?.scrollTop||0;
+  };
+  const handleDragMove=(e)=>{
+    if(dragStartY.current===null)return;
+    const dy=e.touches[0].clientY-dragStartY.current;
+    // Only close if panel is scrolled to top and dragging down
+    if(dragStartScroll.current===0&&dy>60){
+      setPanelOpen(false);
+      dragStartY.current=null;
+    }
+  };
+  const handleDragEnd=()=>{
+    dragStartY.current=null;
+  };
+
+  // Globe peek height: 10% of screen = ~68px on typical phone
+  const PEEK_HEIGHT=Math.round(window.innerHeight*0.10);
+  const PANEL_HEIGHT=window.innerHeight-PEEK_HEIGHT;
+
+  return(
+    <div style={{width:"100vw",height:"100vh",overflow:"hidden",position:"relative",background:"#1C1C1E"}}>
+
+      {/* ── Full-screen globe ── */}
+      <div style={{position:"absolute",inset:0}}>
+        <GlobeCanvas photos={filtered} selectedId={selectedId} onSelect={handlePinSelect}/>
+      </div>
+
+      {/* ── Legend — top left ── */}
+      <div style={{
+        position:"absolute",top:16,left:16,zIndex:30,
+        background:"rgba(28,28,30,0.82)",
+        border:"1px solid rgba(200,149,108,0.2)",
+        backdropFilter:"blur(12px)",
+        padding:"8px 12px",
+        borderRadius:6,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}>
+          <div style={{width:7,height:7,borderRadius:"50%",background:C.accent,boxShadow:`0 0 4px ${C.accent}`}}/>
+          <span style={{fontSize:10,color:"rgba(245,240,235,0.55)",fontFamily:C.fontSans,letterSpacing:"0.06em"}}>Photo</span>
+        </div>
+        <div style={{fontSize:10,color:"rgba(245,240,235,0.3)",fontFamily:C.fontSans,letterSpacing:"0.03em"}}>Drag · Pinch to zoom</div>
+      </div>
+
+      {/* ── Back to site — top right ── */}
+      <div style={{position:"absolute",top:16,right:16,zIndex:30}}>
+        <button onClick={()=>onNavigate("home")}
+          style={{padding:"8px 14px",background:"rgba(28,28,30,0.82)",border:"1px solid rgba(200,149,108,0.22)",color:"rgba(245,240,235,0.6)",fontSize:10,cursor:"pointer",fontFamily:C.fontSans,letterSpacing:"0.1em",textTransform:"uppercase",backdropFilter:"blur(12px)",borderRadius:4}}>
+          ← Back
+        </button>
+      </div>
+
+      {/* ── View Photos bar — bottom (when panel closed) ── */}
+      {!panelOpen&&(
+        <div style={{
+          position:"absolute",bottom:0,left:0,right:0,zIndex:30,
+          background:"rgba(20,18,16,0.92)",
+          borderTop:"1px solid rgba(200,149,108,0.18)",
+          backdropFilter:"blur(16px)",
+          padding:"0 20px",
+          height:72,
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+        }}>
+          <div>
+            <div style={{fontSize:9,color:"rgba(200,149,108,0.65)",letterSpacing:"0.2em",textTransform:"uppercase",fontFamily:C.fontSans,marginBottom:2}}>PHOTOGLOBE</div>
+            <div style={{fontSize:14,color:"rgba(245,240,235,0.85)",fontFamily:C.font,fontWeight:300,letterSpacing:"0.02em"}}>
+              {stats.p} {stats.p===1?"photo":"photos"} · {stats.c} {stats.c===1?"country":"countries"}
+            </div>
+          </div>
+          <button
+            onClick={()=>setPanelOpen(true)}
+            style={{
+              display:"flex",alignItems:"center",gap:6,
+              background:"rgba(200,149,108,0.12)",
+              border:"1px solid rgba(200,149,108,0.35)",
+              color:C.accent,
+              padding:"9px 16px",
+              fontSize:11,fontWeight:600,
+              cursor:"pointer",
+              fontFamily:C.fontSans,
+              letterSpacing:"0.1em",
+              textTransform:"uppercase",
+              borderRadius:4,
+            }}>
+            View Photos
+            <span style={{fontSize:14,lineHeight:1}}>↑</span>
+          </button>
+        </div>
+      )}
+
+      {/* ── Bottom Sheet Panel ── */}
+      {panelOpen&&(
+        <>
+          {/* Tap on globe peek to close */}
+          <div
+            style={{position:"absolute",top:0,left:0,right:0,height:PEEK_HEIGHT,zIndex:39,cursor:"pointer"}}
+            onClick={()=>setPanelOpen(false)}
+          />
+
+          <div
+            style={{
+              position:"absolute",
+              bottom:0,left:0,right:0,
+              height:PANEL_HEIGHT,
+              zIndex:40,
+              background:C.sidebar,
+              borderRadius:"18px 18px 0 0",
+              display:"flex",flexDirection:"column",
+              animation:"mobileSheetUp 0.38s cubic-bezier(0.16,1,0.3,1)",
+              overflow:"hidden",
+              boxShadow:"0 -8px 40px rgba(42,36,32,0.18)",
+            }}
+          >
+            {/* Drag handle */}
+            <div
+              style={{display:"flex",justifyContent:"center",padding:"12px 0 6px",flexShrink:0,cursor:"grab"}}
+              onTouchStart={handleDragStart}
+              onTouchMove={handleDragMove}
+              onTouchEnd={handleDragEnd}
+            >
+              <div style={{width:36,height:4,borderRadius:2,background:"rgba(42,36,32,0.2)"}}/>
+            </div>
+
+            {/* Panel header */}
+            <div style={{padding:"0 20px 12px",borderBottom:`1px solid ${C.border}`,flexShrink:0}}>
+              <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:14}}>
+                <div>
+                  <div style={{fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:C.accent,fontFamily:C.font,marginBottom:2}}>PhotoGlobe</div>
+                  <div style={{fontSize:24,fontWeight:300,color:C.dark,fontFamily:C.font,lineHeight:1}}>SAEIRIS</div>
+                  <div style={{fontSize:11,color:C.muted,fontFamily:C.fontSans,marginTop:3,letterSpacing:"0.04em"}}>Film & Digital Photos</div>
+                </div>
+                {user?(
+                  <button onClick={()=>supabase.auth.signOut()} style={{padding:"7px 13px",background:"transparent",border:`1px solid ${C.border}`,color:C.muted,fontSize:11,cursor:"pointer",fontFamily:C.fontSans,letterSpacing:"0.06em",marginTop:4}}>Sign Out</button>
+                ):(
+                  <button onClick={onAuthClick} style={{padding:"7px 13px",background:"transparent",border:`1px solid ${C.accent}`,color:C.accent,fontSize:11,cursor:"pointer",fontFamily:C.fontSans,letterSpacing:"0.06em",fontWeight:600,marginTop:4}}>Sign In</button>
+                )}
+              </div>
+
+              {/* Stats */}
+              <div style={{display:"flex",gap:0,marginBottom:14,border:`1px solid ${C.border}`}}>
+                {[{l:"Photos",v:stats.p},{l:"Countries",v:stats.c},{l:"Cameras",v:stats.cam}].map((s,i)=>(
+                  <div key={s.l} style={{flex:1,padding:"10px 6px",textAlign:"center",borderRight:i<2?`1px solid ${C.border}`:"none"}}>
+                    <div style={{fontSize:20,fontWeight:300,color:C.dark,fontFamily:C.font}}>{s.v}</div>
+                    <div style={{fontSize:9,color:C.muted,textTransform:"uppercase",letterSpacing:"0.1em",fontFamily:C.fontSans,marginTop:2}}>{s.l}</div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Search */}
+              <div style={{position:"relative",marginBottom:10}}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)"}}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+                <input
+                  type="text"
+                  value={search}
+                  onChange={e=>setSearch(e.target.value)}
+                  placeholder="Search photos..."
+                  style={{width:"100%",padding:"10px 14px 10px 34px",background:C.bg,border:`1px solid ${C.border}`,color:C.dark,fontSize:14,outline:"none",fontFamily:C.font,boxSizing:"border-box"}}
+                />
+              </div>
+
+              {/* Tag filters */}
+              <div style={{display:"flex",flexWrap:"nowrap",gap:6,overflowX:"auto",WebkitOverflowScrolling:"touch",paddingBottom:2}}>
+                <button onClick={()=>setFilter("all")} style={{padding:"4px 12px",fontSize:11,background:filter==="all"?"rgba(200,149,108,0.1)":"transparent",color:filter==="all"?C.accent:C.muted,border:`1px solid ${filter==="all"?C.accent:C.border}`,cursor:"pointer",fontFamily:C.fontSans,flexShrink:0,borderRadius:2}}>All</button>
+                {allTags.slice(0,8).map(t=><button key={t} onClick={()=>setFilter(filter===t?"all":t)} style={{padding:"4px 12px",fontSize:11,background:filter===t?"rgba(200,149,108,0.1)":"transparent",color:filter===t?C.accent:C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,cursor:"pointer",fontFamily:C.fontSans,flexShrink:0,borderRadius:2}}>#{t}</button>)}
+              </div>
+            </div>
+
+            {/* Photo list */}
+            <div
+              ref={panelRef}
+              style={{flex:1,overflowY:"auto",WebkitOverflowScrolling:"touch"}}
+              onTouchStart={handleDragStart}
+              onTouchMove={handleDragMove}
+              onTouchEnd={handleDragEnd}
+            >
+              {filtered.length===0?(
+                <div style={{textAlign:"center",padding:"48px 20px",color:C.muted}}>
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="1" style={{marginBottom:12,opacity:0.5}}><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+                  <div style={{fontSize:16,fontWeight:300,color:C.dark,fontFamily:C.font,marginBottom:4}}>No photos yet</div>
+                  <div style={{fontSize:13,fontFamily:C.fontSans}}>Be the first to upload.</div>
+                </div>
+              ):filtered.map(p=>(
+                <PhotoListItem
+                  key={p.id}
+                  photo={p}
+                  selected={selectedId===p.id}
+                  onClick={()=>setSelectedId(selectedId===p.id?null:p.id)}
+                />
+              ))}
+            </div>
+
+            {/* Upload button */}
+            <div style={{padding:"14px 16px",flexShrink:0,borderTop:`1px solid ${C.border}`}}>
+              <button
+                onClick={()=>{ if(!user){onAuthClick();}else{onUploadClick();} }}
+                style={{width:"100%",padding:"14px",background:C.dark,color:C.bg,border:"none",fontSize:12,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:C.fontSans}}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14"/></svg>
+                Upload Photo
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* ── Mobile Photo Detail Sheet (renders on top of everything) ── */}
+      {sel&&(
+        <MobilePhotoDetail
+          photo={sel}
+          onClose={()=>setSelectedId(null)}
+          onLike={onLike}
+          onDelete={onDelete}
+          user={user}
+        />
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════
+// MAIN PHOTOGLOBE (entry point)
+// ══════════════════════════════════════════════════════════════
 export default function PhotoGlobe({onNavigate}){
+  const isMobile = window.innerWidth < 768;
+
   const[photos,setPhotos]=useState([]);
   const[selectedId,setSelectedId]=useState(null);
   const[user,setUser]=useState(null);
@@ -465,7 +813,6 @@ export default function PhotoGlobe({onNavigate}){
   const handleDelete=async(photoId)=>{
     const photo=photos.find(p=>p.id===photoId);
     if(!photo||photo.user_id!==user?.id)return;
-    // Delete from storage if there's an image
     if(photo.image_url){
       const path=photo.image_url.split('/photos/')[1];
       if(path)await supabase.storage.from('photos').remove([path]);
@@ -486,6 +833,38 @@ export default function PhotoGlobe({onNavigate}){
   const stats=useMemo(()=>({p:photos.length,c:new Set(photos.map(p=>p.country)).size,cam:new Set(photos.map(p=>p.camera)).size}),[photos]);
   const sel=photosWithLikes.find(p=>p.id===selectedId);
 
+  // ── MOBILE LAYOUT ──
+  if(isMobile){
+    return(
+      <>
+        <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}@keyframes mobileSheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}::-webkit-scrollbar{display:none}input::placeholder{color:#8A7A68;font-family:'Cormorant Garamond',serif}input:focus{border-color:rgba(200,149,108,0.4)!important}`}</style>
+        <MobilePhotoGlobe
+          onNavigate={onNavigate}
+          photos={photosWithLikes}
+          filtered={filtered}
+          stats={stats}
+          selectedId={selectedId}
+          setSelectedId={setSelectedId}
+          user={user}
+          userLikes={userLikes}
+          search={search}
+          setSearch={setSearch}
+          filter={filter}
+          setFilter={setFilter}
+          allTags={allTags}
+          onLike={handleLike}
+          onDelete={handleDelete}
+          onUploadClick={()=>setShowUpload(true)}
+          onAuthClick={()=>setShowAuth(true)}
+          loadPhotos={loadPhotos}
+        />
+        {showUpload&&user&&<UploadModal onClose={()=>setShowUpload(false)} onUpload={loadPhotos} user={user}/>}
+        {showAuth&&<AuthModal onClose={()=>setShowAuth(false)} onAuth={()=>{loadPhotos();}}/>}
+      </>
+    );
+  }
+
+  // ── DESKTOP LAYOUT (unchanged) ──
   return(
     <div style={{width:"100vw",height:"100vh",background:C.bg,fontFamily:C.fontSans,display:"flex",overflow:"hidden",position:"relative",color:C.dark}}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');*{box-sizing:border-box;margin:0;padding:0}@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:rgba(200,149,108,0.2);border-radius:2px}input::placeholder{color:#8A7A68;font-family:'Cormorant Garamond',serif}input:focus{border-color:rgba(200,149,108,0.4)!important}`}</style>
@@ -504,8 +883,6 @@ export default function PhotoGlobe({onNavigate}){
               <button onClick={()=>setShowAuth(true)} style={{padding:"6px 12px",background:"transparent",border:`1px solid ${C.accent}`,color:C.accent,fontSize:11,cursor:"pointer",fontFamily:C.fontSans,letterSpacing:"0.06em",fontWeight:600}}>Sign In</button>
             }
           </div>
-
-          {/* Stats */}
           <div style={{display:"flex",gap:0,marginBottom:18,border:`1px solid ${C.border}`}}>
             {[{l:"Photos",v:stats.p},{l:"Countries",v:stats.c},{l:"Cameras",v:stats.cam}].map((s,i)=>(
               <div key={s.l} style={{flex:1,padding:"10px 8px",textAlign:"center",borderRight:i<2?`1px solid ${C.border}`:"none"}}>
@@ -514,21 +891,15 @@ export default function PhotoGlobe({onNavigate}){
               </div>
             ))}
           </div>
-
-          {/* Search */}
           <div style={{position:"relative",marginBottom:12}}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={C.muted} strokeWidth="2" style={{position:"absolute",left:12,top:"50%",transform:"translateY(-50%)"}}><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
             <input type="text" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search photos..." style={{width:"100%",padding:"9px 14px 9px 34px",background:C.bg,border:`1px solid ${C.border}`,color:C.dark,fontSize:13,outline:"none",fontFamily:C.font}}/>
           </div>
-
-          {/* Tag filters */}
           <div style={{display:"flex",flexWrap:"wrap",gap:5}}>
             <button onClick={()=>setFilter("all")} style={{padding:"3px 10px",fontSize:11,background:filter==="all"?"rgba(200,149,108,0.1)":"transparent",color:filter==="all"?C.accent:C.muted,border:`1px solid ${filter==="all"?C.accent:C.border}`,cursor:"pointer",fontFamily:C.fontSans}}>All</button>
             {allTags.slice(0,8).map(t=><button key={t} onClick={()=>setFilter(filter===t?"all":t)} style={{padding:"3px 10px",fontSize:11,background:filter===t?"rgba(200,149,108,0.1)":"transparent",color:filter===t?C.accent:C.muted,border:`1px solid ${filter===t?C.accent:C.border}`,cursor:"pointer",fontFamily:C.fontSans}}>#{t}</button>)}
           </div>
         </div>
-
-        {/* Photo list */}
         <div style={{flex:1,overflowY:"auto"}}>
           {filtered.length===0&&photos.length===0?(
             <div style={{textAlign:"center",padding:"48px 20px",color:C.muted}}>
@@ -538,8 +909,6 @@ export default function PhotoGlobe({onNavigate}){
             </div>
           ):filtered.map(p=><PhotoListItem key={p.id} photo={p} selected={selectedId===p.id} onClick={()=>setSelectedId(selectedId===p.id?null:p.id)}/>)}
         </div>
-
-        {/* Upload button */}
         <div style={{padding:"16px 20px",flexShrink:0,borderTop:`1px solid ${C.border}`}}>
           <button onClick={()=>{if(!user){setShowAuth(true);}else{setShowUpload(true);}}}
             style={{width:"100%",padding:"13px",background:C.dark,color:C.bg,border:"none",fontSize:12,fontWeight:600,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8,letterSpacing:"0.1em",textTransform:"uppercase",fontFamily:C.fontSans,transition:"background 0.3s"}}
@@ -560,13 +929,11 @@ export default function PhotoGlobe({onNavigate}){
           onMouseOut={e=>e.currentTarget.style.color="rgba(245,240,235,0.5)"}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">{sidebar?<path d="M15 18l-6-6 6-6"/>:<path d="M9 18l6-6-6-6"/>}</svg>
         </button>
-
         <div style={{position:"absolute",bottom:20,left:16,zIndex:40,display:"flex",gap:12,padding:"8px 14px",background:"rgba(28,28,30,0.8)",border:`1px solid rgba(200,149,108,0.15)`,backdropFilter:"blur(10px)",fontSize:11,color:"rgba(245,240,235,0.4)",fontFamily:C.fontSans,letterSpacing:"0.06em"}}>
           <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:6,height:6,borderRadius:"50%",background:C.accent}}/>Photo</div>
           <div style={{color:"rgba(200,149,108,0.2)"}}>·</div>
           <div>Drag · Scroll to zoom</div>
         </div>
-
         <GlobeCanvas photos={filtered} selectedId={selectedId} onSelect={id=>setSelectedId(selectedId===id?null:id)}/>
         {sel&&<PhotoDetail photo={sel} onClose={()=>setSelectedId(null)} onLike={handleLike} onDelete={handleDelete} user={user}/>}
       </div>
