@@ -603,37 +603,42 @@ function MobilePhotoGlobe({onNavigate, photos, filtered, stats, selectedId, setS
       {/* ── View Photos bar — bottom (when panel closed) ── */}
       {!panelOpen&&(
         <div style={{
-          position:"absolute",bottom:0,left:0,right:0,zIndex:30,
-          background:"rgba(20,18,16,0.92)",
-          borderTop:"1px solid rgba(200,149,108,0.18)",
-          backdropFilter:"blur(16px)",
-          padding:"0 20px",
-          height:72,
-          display:"flex",alignItems:"center",justifyContent:"space-between",
+          position:"absolute",bottom:16,left:16,right:16,zIndex:30,
+          display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,
         }}>
-          <div>
-            <div style={{fontSize:9,color:"rgba(200,149,108,0.65)",letterSpacing:"0.2em",textTransform:"uppercase",fontFamily:C.fontSans,marginBottom:2}}>PHOTOGLOBE</div>
-            <div style={{fontSize:14,color:"rgba(245,240,235,0.85)",fontFamily:C.font,fontWeight:300,letterSpacing:"0.02em"}}>
+          {/* Stats pill — matches legend style */}
+          <div style={{
+            background:"rgba(28,28,30,0.82)",
+            border:"1px solid rgba(200,149,108,0.2)",
+            backdropFilter:"blur(12px)",
+            padding:"8px 12px",
+            borderRadius:6,
+          }}>
+            <div style={{fontSize:9,color:"rgba(200,149,108,0.65)",letterSpacing:"0.2em",textTransform:"uppercase",fontFamily:C.fontSans,marginBottom:3}}>PHOTOGLOBE</div>
+            <div style={{fontSize:13,color:"rgba(245,240,235,0.75)",fontFamily:C.font,fontWeight:300,letterSpacing:"0.02em"}}>
               {stats.p} {stats.p===1?"photo":"photos"} · {stats.c} {stats.c===1?"country":"countries"}
             </div>
           </div>
+          {/* View Photos button — matches legend style */}
           <button
             onClick={()=>setPanelOpen(true)}
             style={{
               display:"flex",alignItems:"center",gap:6,
-              background:"rgba(200,149,108,0.12)",
-              border:"1px solid rgba(200,149,108,0.35)",
-              color:C.accent,
-              padding:"9px 16px",
+              background:"rgba(28,28,30,0.82)",
+              border:"1px solid rgba(200,149,108,0.2)",
+              backdropFilter:"blur(12px)",
+              color:"rgba(245,240,235,0.75)",
+              padding:"8px 14px",
               fontSize:11,fontWeight:600,
               cursor:"pointer",
               fontFamily:C.fontSans,
               letterSpacing:"0.1em",
               textTransform:"uppercase",
-              borderRadius:4,
+              borderRadius:6,
+              flexShrink:0,
             }}>
-            View Photos
-            <span style={{fontSize:14,lineHeight:1}}>↑</span>
+            <div style={{width:7,height:7,borderRadius:"50%",background:C.accent,boxShadow:`0 0 4px ${C.accent}`,flexShrink:0}}/>
+            View Photos ↑
           </button>
         </div>
       )}
