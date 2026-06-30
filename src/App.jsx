@@ -1529,12 +1529,6 @@ function MobileGetStarted(){
       {status==="sent"?
         <div style={{fontFamily:font,fontSize:16,color:"#C8956C",lineHeight:1.8}}>Thank you — we'll be in touch within 48 hours.</div>:
         <form onSubmit={submit}>
-          <input style={inp} placeholder="Your Name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} required/>
-          <input style={inp} placeholder="Email Address" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} required/>
-          <input style={inp} placeholder="Dream Destination" value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))}/>
-          <input style={inp} placeholder="Number of Travelers" value={form.travelers} onChange={e=>setForm(f=>({...f,travelers:e.target.value}))}/>
-          <input style={inp} placeholder="Preferred Travel Dates (flexible is fine!)" value={form.dates} onChange={e=>setForm(f=>({...f,dates:e.target.value}))}/>
-          <textarea style={{...inp,resize:"none",height:100}} placeholder="Tell us about your trip..." value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))}/>
           <div style={{border:"1px solid rgba(200,149,108,0.35)",background:"rgba(253,251,248,0.9)",padding:"18px 20px",marginBottom:20}}>
             <div style={{fontFamily:font,fontSize:8,letterSpacing:"0.18em",textTransform:"uppercase",color:"#C8956C",marginBottom:5}}>Saeiris Fee</div>
             <div style={{fontFamily:font,fontSize:28,fontWeight:300,color:"#2A2420",lineHeight:1,marginBottom:12}}>$499</div>
@@ -1542,6 +1536,12 @@ function MobileGetStarted(){
               <div style={{fontFamily:font,fontSize:13,color:"#5A4A38",lineHeight:1.75}}>Custom itinerary planning, Canon AE-1 camera for your trip, and professional film development included.</div>
             </div>
           </div>
+          <input style={inp} placeholder="Your Name" value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} required/>
+          <input style={inp} placeholder="Email Address" type="email" value={form.email} onChange={e=>setForm(f=>({...f,email:e.target.value}))} required/>
+          <input style={inp} placeholder="Dream Destination" value={form.destination} onChange={e=>setForm(f=>({...f,destination:e.target.value}))}/>
+          <input style={inp} placeholder="Number of Travelers" value={form.travelers} onChange={e=>setForm(f=>({...f,travelers:e.target.value}))}/>
+          <input style={inp} placeholder="Preferred Travel Dates (flexible is fine!)" value={form.dates} onChange={e=>setForm(f=>({...f,dates:e.target.value}))}/>
+          <textarea style={{...inp,resize:"none",height:100}} placeholder="Tell us about your trip..." value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))}/>
           <button type="submit" disabled={status==="sending"} style={{width:"100%",padding:"16px",background:"#2A2420",color:"#C8956C",fontFamily:font,fontSize:12,letterSpacing:"0.15em",textTransform:"uppercase",border:"none",cursor:"pointer"}}>
             {status==="sending"?"Sending...":"Send Inquiry"}
           </button>
