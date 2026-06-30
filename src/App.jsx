@@ -1291,6 +1291,18 @@ function GetStartedSection(){
           </div>
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
+            <div style={{border:"1px solid rgba(200,149,108,0.35)",background:"rgba(253,251,248,0.8)",padding:"22px 26px",marginBottom:4,position:"relative"}}>
+              <div style={{position:"absolute",top:-1,left:26,right:26,height:2,background:"#C8956C"}}/>
+              <div style={{display:"flex",alignItems:"center",gap:24}}>
+                <div style={{flexShrink:0}}>
+                  <div style={{fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Saeiris Fee</div>
+                  <div style={{fontSize:30,fontWeight:300,color:"#2A2420",fontFamily:"'Cormorant Garamond',serif",lineHeight:1}}>$499</div>
+                </div>
+                <div style={{flex:1,borderLeft:"1px solid rgba(200,149,108,0.2)",paddingLeft:22}}>
+                  <div style={{fontSize:14,color:"#5A4A38",fontFamily:"'Cormorant Garamond',serif",lineHeight:1.8}}>Custom itinerary planning, Canon AE-1 camera for your trip, and professional film development included.</div>
+                </div>
+              </div>
+            </div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
               <input value={form.name} onChange={e=>up("name",e.target.value)} placeholder="Your name" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
               <input value={form.email} onChange={e=>up("email",e.target.value)} placeholder="Email" type="email" style={iS} onFocus={e=>e.target.style.borderBottomColor="#C8956C"} onBlur={e=>e.target.style.borderBottomColor="rgba(200,149,108,0.2)"}/>
@@ -1524,7 +1536,7 @@ function MobileGetStarted(){
           <input style={inp} placeholder="Number of Travelers" value={form.travelers} onChange={e=>setForm(f=>({...f,travelers:e.target.value}))}/>
           <input style={inp} placeholder="Preferred Travel Dates (flexible is fine!)" value={form.dates} onChange={e=>setForm(f=>({...f,dates:e.target.value}))}/>
           <textarea style={{...inp,resize:"none",height:100}} placeholder="Tell us about your trip..." value={form.message} onChange={e=>setForm(f=>({...f,message:e.target.value}))}/>
-          <div style={{fontFamily:font,fontSize:11,color:"#8A7A68",marginBottom:20,letterSpacing:"0.05em"}}>Flat planning fee: $350</div>
+          <div style={{fontFamily:font,fontSize:11,color:"#8A7A68",marginBottom:20,letterSpacing:"0.05em"}}>Saeiris Fee: $499 — includes itinerary planning, Canon AE-1 camera &amp; film development.</div>
           <button type="submit" disabled={status==="sending"} style={{width:"100%",padding:"16px",background:"#2A2420",color:"#C8956C",fontFamily:font,fontSize:12,letterSpacing:"0.15em",textTransform:"uppercase",border:"none",cursor:"pointer"}}>
             {status==="sending"?"Sending...":"Send Inquiry"}
           </button>
