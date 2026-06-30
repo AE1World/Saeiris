@@ -1292,7 +1292,6 @@ function GetStartedSection(){
         ):(
           <div style={{display:"flex",flexDirection:"column",gap:16,textAlign:"left"}}>
             <div style={{border:"1px solid rgba(200,149,108,0.35)",background:"rgba(253,251,248,0.8)",padding:"22px 26px",marginBottom:4,position:"relative"}}>
-              <div style={{position:"absolute",top:-1,left:26,right:26,height:2,background:"#C8956C"}}/>
               <div style={{display:"flex",alignItems:"center",gap:24}}>
                 <div style={{flexShrink:0}}>
                   <div style={{fontSize:9,letterSpacing:"0.2em",textTransform:"uppercase",color:"#C8956C",fontFamily:"'Cormorant Garamond',serif",marginBottom:6}}>Saeiris Fee</div>
